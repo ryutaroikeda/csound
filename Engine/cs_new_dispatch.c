@@ -216,10 +216,11 @@ void dag_build(CSOUND *csound, INSDS *chain)
       printf("dag_num_active = %d\n", csound->dag_num_active);
     i = 0; chain = save;
     while (chain != NULL) {     /* for each instance check against later */
+      INSDS *next = NULL;
       int j = i+1;              /* count of instance */
       if (UNLIKELY(csound->oparms->odebug))
         printf("\nWho depends on %d (instr %d)?\n", i, chain->insno);
-      INSDS *next = chain->nxtact;
+      next = chain->nxtact;
       INSTR_SEMANTICS *current_instr = dag_get_info(csound, chain->insno);
       //csp_set_print(csound, current_instr->read);
       //csp_set_print(csound, current_instr->write);
@@ -296,9 +297,15 @@ void dag_reinit(CSOUND *csound)
     //dag_print_state(csound);
 }
 
-#define ATOMIC_READ(x) __sync_fetch_and_or(&(x), 0)
-#define ATOMIC_WRITE(x,v) __sync_fetch_and_and(&(x), v)
-#define ATOMIC_CAS(x,current,new)  __sync_bool_compare_and_swap(x,current,new)
+#ifdef MSVC
+ #define ATOMIC_READ(x) InterlockedOr(&(x), 0)
+ #define ATOMIC_WRITE(x,v) InterlockedAnd(&(x), v)
+ #define ATOMIC_CAS(x,current,new)  InterlockedCompareExchange(x,new,current)
+#else
+ #define ATOMIC_READ(x) __sync_fetch_and_or(&(x), 0)
+ #define ATOMIC_WRITE(x,v) __sync_fetch_and_and(&(x), v)
+ #define ATOMIC_CAS(x,current,new)  __sync_bool_compare_and_swap(x,current,new)
+#endif
 
 taskID dag_get_task(CSOUND *csound)
 {

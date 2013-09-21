@@ -338,7 +338,11 @@ INSTR_SEMANTICS *csp_orc_sa_instr_get_by_num(CSOUND *csound, int16 insno)
       }
       current_instr = current_instr->next;
     }
-    snprintf(buf, BUF_LENGTH, "%i", insno);
+#ifdef MSVC
+    _snprintf(buf, BUF_LENGTH, "%i", insno);
+#else
+	snprintf(buf, BUF_LENGTH, "%i", insno);
+#endif
     current_instr = csp_orc_sa_instr_get_by_name(csound, buf);
     if (current_instr != NULL) {
       current_instr->insno = insno;
@@ -350,9 +354,10 @@ INSTR_SEMANTICS *csp_orc_sa_instr_get_by_num(CSOUND *csound, int16 insno)
 
 void csp_orc_analyze_tree(CSOUND* csound, TREE* root)
 {
+	TREE *current = NULL;
     if (PARSER_DEBUG) csound->Message(csound, "Performing csp analysis\n");
 
-    TREE *current = root;
+    current = root;
     TREE *temp;
 
     while(current != NULL) {

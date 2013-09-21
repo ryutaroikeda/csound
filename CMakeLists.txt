@@ -214,24 +214,11 @@ if(WIN32)
         winmm 
         winspool 
         ws2_32 
-        wsock32 
-        advapi32 
-        comctl32 
-        comdlg32 
-        glu32 
-        kernel32 
-        odbc32 
-        odbccp32 
-        ole32 
-        oleaut32 
-        shell32             
-        user32 
-        uuid             
-        winmm 
-        winspool 
-        ws2_32 
-        wsock32
-        pthread)
+        wsock32)
+
+	if(NOT MSVC)
+		list(APPEND CSOUND_WINDOWS_LIBRARIES pthread)
+	endif()
     
 endif(WIN32)
 
@@ -272,13 +259,16 @@ set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 if(USE_DOUBLE) 
     add_definitions("-DUSE_DOUBLE")
 endif(USE_DOUBLE)
-check_c_compiler_flag(-fvisibility=hidden HAS_VISIBILITY_HIDDEN)
-check_cxx_compiler_flag(-fvisibility=hidden HAS_CXX_VISIBILITY_HIDDEN)
-if (HAS_VISIBILITY_HIDDEN)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
-endif()
-if (HAS_CXX_VISBILITY_HIDDEN)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+
+if(NOT MSVC)
+	check_c_compiler_flag(-fvisibility=hidden HAS_VISIBILITY_HIDDEN)
+	check_cxx_compiler_flag(-fvisibility=hidden HAS_CXX_VISIBILITY_HIDDEN)
+	if (HAS_VISIBILITY_HIDDEN)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+	endif()
+	if (HAS_CXX_VISBILITY_HIDDEN)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+	endif()
 endif()
 
 if(APPLE)
@@ -376,7 +366,7 @@ find_package(OpenMP)
 find_library(LIBSNDFILE_LIBRARY sndfile)
 
 if(NOT LIBSNDFILE_LIBRARY AND WIN32)
-find_library(LIBSNDFILE_LIBRARY sndfile-1)
+	find_library(LIBSNDFILE_LIBRARY sndfile-1)
 endif()
 
 if(NOT LIBSNDFILE_LIBRARY)
@@ -398,6 +388,14 @@ endif()
 
 if(NOT PTHREAD_LIBRARY)
     message(FATAL_ERROR "Csound requires the pthread library")
+endif()
+
+find_path(PTHREAD_H_PATH pthread.h)
+
+if(PTHREAD_H_PATH)
+	include_directories(${PTHREAD_H_PATH})
+else()
+	message(FATAL_ERROR "Could not find pthread.h")
 endif()
 
 set(CMAKE_REQUIRED_INCLUDES pthread.h)

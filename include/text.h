@@ -129,7 +129,7 @@ extern "C" {
 
 #ifdef __BUILDING_LIBCSOUND
 
-char *csoundLocalizeString(const char *s);
+PUBLIC char *csoundLocalizeString(const char *s);
 /* Deal with localisation of mesages */
 
 #define Str(x)  (x)

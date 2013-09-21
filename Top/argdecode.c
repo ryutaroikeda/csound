@@ -1260,11 +1260,11 @@ PUBLIC int csoundSetOption(CSOUND *csound, char *option){
 }
 
 PUBLIC void csoundSetParams(CSOUND *csound, CSOUND_PARAMS *p){
-
+  OPARMS *oparms = NULL;
   /* if already compiled and running, return */
   if(csound->engineStatus & CS_STATE_COMP) return;
 
-  OPARMS *oparms = csound->oparms;
+  oparms = csound->oparms;
   /* simple ON/OFF switches */
   oparms->odebug = p->debug_mode;
   oparms->displays = p->displays;

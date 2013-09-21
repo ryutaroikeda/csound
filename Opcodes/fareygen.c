@@ -24,8 +24,13 @@
 #include "csdl.h"
 #include <math.h>
 
-static const int MAX_PFACTOR = 16;
-static const int MAX_PRIMES = 168; /* 168 primes < 1000 */
+#ifdef MSVC
+ #define MAX_PFACTOR 16
+ #define MAX_PRIMES 168
+#else
+ static const int MAX_PFACTOR = 16;
+ static const int MAX_PRIMES = 168; /* 168 primes < 1000 */
+#endif
 static const int primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37,
                              41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83,
                              89, 97, 101, 103, 107, 109, 113, 127, 131,

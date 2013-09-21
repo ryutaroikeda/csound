@@ -265,8 +265,8 @@ typedef __int64             int_least64_t;
 typedef unsigned __int64    uint_least64_t;
 #  endif
 #if !defined(MSVC)
-typedef long                intptr_t;
-typedef unsigned long       uintptr_t;
+//typedef long                intptr_t;
+//typedef unsigned long       uintptr_t;
 #endif
 #endif      /* !(USE_GUSI2 || HAVE_STDINT_H || HAVE_C99) */
 

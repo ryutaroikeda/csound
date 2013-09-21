@@ -193,7 +193,11 @@ TREE *csp_locks_insert(CSOUND *csound, TREE *root)
             gvar       = global_var_lock_find(csound, global_var);
             lock_tok   = lookup_token(csound, "##globallock");
             unlock_tok = lookup_token(csound, "##globalunlock");
-            snprintf(buf, 8, "%i", gvar->index);
+#ifdef MSVC
+            _snprintf(buf, 8, "%i", gvar->index);
+#else
+			snprintf(buf, 8, "%i", gvar->index);
+#endif
             var_tok    = make_int(csound, buf);
             var0_tok   = make_int(csound, buf);
 

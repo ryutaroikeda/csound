@@ -22,7 +22,11 @@
 */
 
 #include "csoundCore.h"
-#include <unistd.h>
+#ifndef MSVC
+ #include <unistd.h>
+#else
+ #include <io.h>
+#endif
 #include <stdlib.h>
 #include <sys/types.h>
 #ifdef WIN32

@@ -92,6 +92,11 @@ if(USE_FLTK OR BUILD_VIRTUAL_KEYBOARD)
   endif()
 endif()
 
+# Check for WinMM libs, part of the Windows SDK
+if(WIN32)
+	find_library(WINMM_LIB winmm)
+endif()
+
 # BUILD TARGETS
 
 # check_deps(USE_COREAUDIO APPLE COREAUDIO_INCLUDE_PATH COREAUDIO_LIBRARY)
@@ -127,8 +132,8 @@ if(WIN32)
     set(rtwinmm_LIBS
         winmm gdi32 kernel32) # should probably do checks for these libs
     make_plugin(rtwinmm rtwinmm.c "${rtwinmm_LIBS}")
+	target_link_libraries(rtwinmm ${WINMM_LIB})
 endif()
-
 
 check_deps(USE_PULSEAUDIO PULSEAUDIO_HEADER PULSEAUDIO_LIBRARY PULSESIMPLE_LIBRARY)
 if(USE_PULSEAUDIO)

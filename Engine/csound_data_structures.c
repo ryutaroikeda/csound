@@ -36,10 +36,11 @@ PUBLIC CONS_CELL* cs_cons(CSOUND* csound, void* val, CONS_CELL* cons) {
 }
 
 PUBLIC CONS_CELL* cs_cons_append(CONS_CELL* cons1, CONS_CELL* cons2) {
-    if(cons1 == NULL) return cons2;
+	CONS_CELL* c = NULL;
+	if(cons1 == NULL) return cons2;
     if(cons2 == NULL) return cons1;
 
-    CONS_CELL* c = cons1;
+    c = cons1;
 
     while (c->next != NULL) c = c->next;
 

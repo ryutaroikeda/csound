@@ -325,17 +325,11 @@ static int SVopen(CSOUND *csound)
     }
     else csound->Message(csound, Str("created socket \n"));
     /* set the addresse to be reusable */
-    if (UNLIKELY( setsockopt(socklisten, SOL_SOCKET, SO_REUSEADDR,
-#ifdef WIN32
-                    (const char *)&opt,
-#else
-                    &opt,
-#endif
-                             sizeof(opt)) < 0 ))
+	if (UNLIKELY(setsockopt(socklisten, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0))
+		return;
 
-      return
-        csound->InitError(csound,
-                          Str("setting socket option to reuse the addresse \n"));
+    csound->InitError(csound,
+                        Str("setting socket option to reuse the addresse \n"));
 
     memset(&(ST(to_addr)), 0, sizeof(ST(to_addr)));    /* clear sock mem */
     ST(local_addr).sin_family = AF_INET;               /* set as INET address */

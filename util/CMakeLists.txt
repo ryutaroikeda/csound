@@ -12,6 +12,11 @@ set(stdutil_SRCS
 make_plugin(stdutil "${stdutil_SRCS}" m ${LIBSNDFILE_LIBRARY})
 add_dependency_to_framework(stdutil ${LIBSNDFILE_LIBRARY})
 
+# Library is missing on MSVC builds
+if(MSVC)
+	target_link_libraries(stdutil ${LIBSNDFILE_LIBRARY})
+endif(MSVC)
+
 if(BUILD_UTILITIES) 
     make_utility(atsa        atsa_main.c)
     make_utility(csanalyze   csanalyze.c)
