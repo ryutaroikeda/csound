@@ -244,7 +244,7 @@ typedef uint_least16_t uint16;
 /* all of the other integer types are already defined */
 typedef int64_t             int_least64_t;
 typedef uint64_t            uint_least64_t;
-#elif defined(HAVE_STDINT_H) || defined(HAVE_C99)
+#elif defined(HAVE_STDINT_H) || defined(HAVE_C99) || (_MSC_FULL_VER >= 180020827)
 #  include <stdint.h>
 #else
 typedef signed char         int8_t;
@@ -265,8 +265,8 @@ typedef __int64             int_least64_t;
 typedef unsigned __int64    uint_least64_t;
 #  endif
 #if !defined(MSVC)
-//typedef long                intptr_t;
-//typedef unsigned long       uintptr_t;
+typedef long                intptr_t;
+typedef unsigned long       uintptr_t;
 #endif
 #endif      /* !(USE_GUSI2 || HAVE_STDINT_H || HAVE_C99) */
 

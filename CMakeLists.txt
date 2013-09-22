@@ -729,15 +729,23 @@ set(LEX_OUT ${CMAKE_CURRENT_BINARY_DIR}/csound_orclex.c)
 set(PRELEX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/Engine/csound_pre.lex)
 set(PRELEX_OUT ${CMAKE_CURRENT_BINARY_DIR}/csound_prelex.c)
 
+if(MSVC)
+	set(FLEX_ARGS --nounistd)
+else ()
+	set(FLEX_ARGS "")
+endif()
+
+message(STATUS "Flex arguments: ${FLEX_ARGS}")
+
 add_custom_command(
     SOURCE ${LEX_SRC}
-    COMMAND ${FLEX_EXECUTABLE} ARGS -B -t ${LEX_SRC} > ${LEX_OUT} 
+    COMMAND ${FLEX_EXECUTABLE} ARGS ${FLEX_ARGS} -B -t ${LEX_SRC} > ${LEX_OUT} 
     TARGET NewParser
     OUTPUTS ${LEX_OUT})
 
 add_custom_command(
     SOURCE ${PRELEX_SRC}
-    COMMAND ${FLEX_EXECUTABLE} ARGS -B ${PRELEX_SRC} > ${PRELEX_OUT} 
+    COMMAND ${FLEX_EXECUTABLE} ARGS ${FLEX_ARGS} -B ${PRELEX_SRC} > ${PRELEX_OUT} 
     TARGET NewParser
     OUTPUTS ${PRELEX_OUT})
 
