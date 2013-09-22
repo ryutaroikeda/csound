@@ -1086,13 +1086,14 @@ static int lorenz(CSOUND *csound, LORENZ *p)
     }
 
     for (n=offset; n<nsmps; n++) {
-      do {
+		while (--skip>0)
+		{
         xx   =      x+hstep*s*(y-x);
         yy   =      y+hstep*(-x*z+r*x-y);
         z    =      z+hstep*(x*y-b*z);
         x    =      xx;
         y    =      yy;
-      } while (--skip>0);
+		}
 
       /* Output the results */
       outx[n] = x;
