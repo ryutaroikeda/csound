@@ -24,6 +24,10 @@
 #include "csdl.h"
 #include <time.h>
 
+#ifdef MSVC
+#include <direct.h>
+#endif
+
 #if defined(__MACH__)
 #include <unistd.h>
 #endif
@@ -91,7 +95,7 @@ static int getcurdir(CSOUND *csound, GETCWD *p)
 #if defined(__MACH__) || defined(LINUX) || defined(__HAIKU__)
    if (UNLIKELY(getcwd(p->Scd->data, p->Scd->size-1)==NULL))
 #else
-   if (UNLIKELY( _getcwd(p->Scd->data, p->Scd->size-1)==NULL))
+   if (UNLIKELY(_getcwd(p->Scd->data, p->Scd->size-1)==NULL))
 #endif
       return csound->InitError(csound, Str("cannot determine current directory"));
     return OK;
@@ -158,7 +162,7 @@ static int readf(CSOUND *csound, READF *p)
       else
         return csound->PerfError(csound, p->h.insdshead, Str("readf: read failure"));
     }
-    *p->line = ++p->lineno;
+    *p->line = (float)(++p->lineno);
     return OK;
 }
 

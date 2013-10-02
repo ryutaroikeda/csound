@@ -22,6 +22,9 @@
 */
 
 #include "csdl.h"
+#ifdef MSVC
+#include <process.h>
+#endif
 
 typedef struct {
   OPDS  h;

@@ -29,6 +29,7 @@
 
 #if defined(MSVC)
 #include <fcntl.h>
+#include <direct.h>
 #endif
 
 #include "namedins.h"
@@ -716,7 +717,11 @@ char *csoundGetDirectoryForPath(CSOUND* csound, const char * path) {
     /* do we need to worry about ~/ on *nix systems ? */
     /* we have a relative path or just a filename */
     cwd = mmalloc(csound, 512);
+#if defined(__MACH__) || defined(LINUX) || defined(__HAIKU__)
     if (UNLIKELY(getcwd(cwd, 512)==NULL)) {
+#else
+	if (UNLIKELY(_getcwd(cwd, 512) == NULL)) {
+#endif
       csoundDie(csound, Str("Current directory path name too long\n"));
     }
 

@@ -32,6 +32,9 @@
 #ifdef GNU_GETTEXT
 #include <locale.h>
 #endif
+#ifdef MSVC
+#include <io.h>
+#endif
 
 #ifdef LINUX
 extern int set_rt_priority(int argc, char **argv);
@@ -75,8 +78,12 @@ int main(int argc, char **argv)
     const char* lang;
 #endif
 
+#ifdef MSVC
+	if (!_isatty(fileno(stdout))) {
+#else
     /* set stdout to non buffering if not outputing to console window */
     if (!isatty(fileno(stdout))) {
+#endif
 #if !defined(WIN32)
       setvbuf(stdout, (char*) NULL, _IONBF, 0);
 #endif

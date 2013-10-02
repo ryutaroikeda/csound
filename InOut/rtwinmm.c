@@ -265,6 +265,7 @@ static int open_device(CSOUND *csound,
     if (set_format_params(csound, &wfx, parm) != 0)
       return -1;
     devNum = (parm->devNum == 1024 ? 0 : parm->devNum);
+	// FIXME: GetVersion giving deprecated warning, should be changed to current alternative
     if (parm->sampleFormat != AE_FLOAT && ((int) GetVersion() & 0xFF) >= 0x05)
       openFlags |= WAVE_FORMAT_DIRECT;
 
