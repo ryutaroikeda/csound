@@ -61,6 +61,7 @@ if(USE_AUDIOUNIT)
     find_path(COREAUDIO_INCLUDE_PATH CoreAudio.h)
     find_library(COREAUDIO_LIBRARY CoreAudio)
 endif()
+
 if(USE_FLTK OR BUILD_VIRTUAL_KEYBOARD)
 
   # first, try to use fltk-config for fltk >= 1.3 (FindFLTK is buggy
@@ -85,16 +86,21 @@ if(USE_FLTK OR BUILD_VIRTUAL_KEYBOARD)
       string(REGEX MATCH "fltk[_ ]png" FLTK_PNG ${FLTK_LIBRARIES})
     endif(FLTK_VERSION GREATER 1.1)
   endif(FLTK_CONFIG_SCRIPT)
-  if(NOT HAVE_FLTK) 
 
+  if(NOT HAVE_FLTK) 
     set(FLTK_SKIP_OPENGL true)
     find_package(FLTK)
   endif()
+
 endif()
 
 # Check for WinMM libs, part of the Windows SDK
 if(WIN32)
-	find_library(WINMM_LIB winmm)
+	find_library(WINMM_LIB WinMM)
+
+	if(NOT WINMM_LIB)
+		message(FATAL_ERROR "Could not find WinMM.lib from Windows SDK")
+	endif()
 endif()
 
 # BUILD TARGETS

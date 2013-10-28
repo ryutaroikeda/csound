@@ -9,7 +9,11 @@ set(stdutil_SRCS
     scope.c
     ../SDIF/sdif.c)
 
-make_plugin(stdutil "${stdutil_SRCS}" m ${LIBSNDFILE_LIBRARY})
+if(MSVC)
+	make_plugin(stdutil "${stdutil_SRCS}" ${LIBSNDFILE_LIBRARY})
+else()
+	make_plugin(stdutil "${stdutil_SRCS}" m ${LIBSNDFILE_LIBRARY})
+endif()
 add_dependency_to_framework(stdutil ${LIBSNDFILE_LIBRARY})
 
 # Library is missing on MSVC builds

@@ -300,7 +300,7 @@ void dag_reinit(CSOUND *csound)
 #ifdef MSVC
  #define ATOMIC_READ(x) InterlockedOr(&(x), 0)
  #define ATOMIC_WRITE(x,v) InterlockedAnd(&(x), v)
- #define ATOMIC_CAS(x,current,new)  InterlockedCompareExchange(x,new,current)
+ #define ATOMIC_CAS(x,current,new) InterlockedCompareExchange(x,new,current)
 #else
  #define ATOMIC_READ(x) __sync_fetch_and_or(&(x), 0)
  #define ATOMIC_WRITE(x,v) __sync_fetch_and_and(&(x), v)

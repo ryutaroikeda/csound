@@ -70,7 +70,11 @@ endif()
 
 set(scansyn_SRCS
     scansyn.c scansynx.c)
-make_plugin(scansyn "${scansyn_SRCS}" m)
+if(MSVC)
+	make_plugin(scansyn "${scansyn_SRCS}")
+else()
+	make_plugin(scansyn "${scansyn_SRCS}" m)
+endif()
 
 if(UNIX)
     make_plugin(control control.c)

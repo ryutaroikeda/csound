@@ -8,7 +8,7 @@ message(STATUS "${CMAKE_HOME_DIRECTORY}")
 
 if (MSVC)
 	# MSVC specific compiler settings
-	set(CMAKE_CXX_FLAGS_RELEASE "")
+	set(CMAKE_CXX_FLAGS_RELEASE "/Ox")
 else ()
 	# GCC/Clang compiler switches
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3 ")
@@ -64,7 +64,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 #
 function(make_executable name srcs libs) 
     add_executable(${name} ${srcs})
-    target_link_libraries (${name} ${libs})
+	target_link_libraries (${name} ${libs})
     set_target_properties(${name} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${BUILD_BIN_DIR})
 
@@ -372,7 +372,7 @@ find_package(OpenMP)
 find_library(LIBSNDFILE_LIBRARY sndfile)
 
 if(NOT LIBSNDFILE_LIBRARY AND WIN32)
-	find_library(LIBSNDFILE_LIBRARY sndfile-1)
+	find_library(LIBSNDFILE_LIBRARY libsndfile-1)
 endif()
 
 if(NOT LIBSNDFILE_LIBRARY)
@@ -389,7 +389,7 @@ endif()
 find_library(PTHREAD_LIBRARY pthread)
 
 if(NOT PTHREAD_LIBRARY AND WIN32)   
-    find_library(PTHREAD_LIBRARY pthreadGC2)
+    find_library(PTHREAD_LIBRARY pthreadVC2)
 endif()
 
 if(NOT PTHREAD_LIBRARY)
@@ -920,9 +920,13 @@ function(make_plugin libname srcs)
 
     set(i 2)
     while( ${i} LESS ${ARGC} )
-        if(NOT MSVC OR NOT("${ARGV${i}}" MATCHES "m"))
-            target_link_libraries(${libname} ${ARGV${i}})
-        endif()
+		if(MSVC)
+			target_link_libraries(${libname} ${ARGV${i}})
+		else()
+			if(NOT("${ARGV${i}}" MATCHES "m"))
+				target_link_libraries(${libname} ${ARGV${i}})
+			endif()
+		endif()
         math(EXPR i "${i}+1")
     endwhile()
     
@@ -939,7 +943,6 @@ endfunction(make_plugin)
 # this copies the dependencies of plugins into framework
 # and fixes the lib name references
 function(add_dependency_to_framework pluginlib dependency)
-
 
 	#if(APPLE AND NOT ${CMAKE_GENERATOR} STREQUAL "Xcode")
 

@@ -3,10 +3,10 @@ option(BUILD_CSBEATS "Build the beats score frontend" ON)
 option(BUILD_WINSOUND "Build the Winsound frontend. Requires FLTK headers and libs." OFF)
 option(BUILD_CSOUND_VST "Build the CsoundVST frontend. Requires the Steinberg VST SDK 2.3." OFF)
 
-
   # first, try to use fltk-config for fltk >= 1.3 (FindFLTK is buggy
   # on Unix, where e.g. xft and xinerama options are not dealt with)
   find_program(FLTK_CONFIG_SCRIPT fltk-config)
+
   if(FLTK_CONFIG_SCRIPT)
     execute_process(COMMAND ${FLTK_CONFIG_SCRIPT} --api-version
                     OUTPUT_VARIABLE FLTK_VERSION)
@@ -26,8 +26,8 @@ option(BUILD_CSOUND_VST "Build the CsoundVST frontend. Requires the Steinberg VS
       string(REGEX MATCH "fltk[_ ]png" FLTK_PNG ${FLTK_LIBRARIES})
     endif(FLTK_VERSION GREATER 1.1)
   endif(FLTK_CONFIG_SCRIPT)
-  if(NOT HAVE_FLTK) 
-
+  
+  if(NOT HAVE_FLTK)
     set(FLTK_SKIP_OPENGL true)
     find_package(FLTK)
   endif()
@@ -83,9 +83,15 @@ set_target_properties(csladspa PROPERTIES PREFIX "")
 check_deps(BUILD_CSBEATS FLEX_EXECUTABLE BISON_EXECUTABLE)
 
 if(BUILD_CSBEATS)
+
+	if(MSVC)
+		set(FLEX_ARGS "--nounistd")
+	else ()
+		set(FLEX_ARGS "")
+	endif()
     
     BISON_TARGET(csbeats_PARSER beats/beats.y ${CMAKE_CURRENT_BINARY_DIR}/beats.tab.c)
-    FLEX_TARGET(csbeats_SCANNER beats/beats.l ${CMAKE_CURRENT_BINARY_DIR}/beatslex.yy.c)
+    FLEX_TARGET(csbeats_SCANNER beats/beats.l ${CMAKE_CURRENT_BINARY_DIR}/beatslex.yy.c COMPILE_FLAGS ${FLEX_ARGS})
 
     ADD_FLEX_BISON_DEPENDENCY(csbeats_SCANNER csbeats_PARSER)
 
@@ -97,8 +103,8 @@ if(BUILD_CSBEATS)
         ${FLEX_csbeats_SCANNER_OUTPUTS}
         ${BISON_csbeats_PARSER_OUTPUTS})
 
-    make_executable(csbeats "${csbeats_SRCS}" "m")
-    
+	make_executable(csbeats "${csbeats_SRCS}" "m")
+
 endif()
 
 #PD Interface
