@@ -13,7 +13,11 @@
 #include "csound_type_system.h"
 #include "csound_standard_types.h"
 #include "csoundCore.h"
-#include "CUnit/Basic.h"
+#if defined(MSVC)
+# include <Basic.h>
+#else
+# include <CUnit/Basic.h>
+#endif
 
 
 int init_suite1(void)

@@ -161,10 +161,6 @@
 #  define PUBLIC
 #endif
 
-#if defined(MSVC)
-#  include <intrin.h> /* for _InterlockedExchange */
-#endif
-
 /**
  * Enables Python interface.
  */
@@ -190,6 +186,10 @@
 #  include "sysdep.h"
 #  include "text.h"
 #  include <stdarg.h>
+#endif
+
+#if defined(MSVC)
+#  include <intrin.h> /* for _InterlockedExchange */
 #endif
 
 #ifdef __cplusplus

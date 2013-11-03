@@ -65,19 +65,16 @@ typedef void *locale_t;
 # endif
 #endif
 
+#if defined(_MSC_VER)
+# define MSVC
+#endif 
+
 #ifndef CABBAGE
-#ifdef MSVC
-typedef __int32 int32;
-typedef __int16 int16;
-typedef unsigned __int32 uint32;
-typedef unsigned __int16 uint16;
-#else
 #include <stdint.h>
 typedef int_least32_t int32;
 typedef int_least16_t int16;
 typedef uint_least32_t uint32;
 typedef uint_least16_t uint16;
-#endif
 #endif
 
 #if defined(HAVE_PTHREAD_SPIN_LOCK)
@@ -157,6 +154,7 @@ typedef uint_least16_t uint16;
 #include <math.h>
 #include <string.h>
 #if defined(HAVE_FCNTL_H) || defined(__unix) || defined(__unix__)
+// FIXME; MSVC > 1800 does have this but CMake does not seem to set HAVE_FCNTL_H to true
 #include <fcntl.h>
 #endif
 #if defined(HAVE_UNISTD_H) || defined(__unix) || defined(__unix__)

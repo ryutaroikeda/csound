@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <string.h>
-#include "CUnit/Basic.h"
 #include "csound.h"
+#if defined(MSVC)
+# include <Basic.h>
+#else
+# include <CUnit/Basic.h>
+#endif
 
 int init_suite1(void)
 {

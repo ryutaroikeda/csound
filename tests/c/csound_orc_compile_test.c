@@ -11,7 +11,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "csoundCore.h"
-#include "CUnit/Basic.h"
+#if defined(MSVC)
+# include <Basic.h>
+#else
+# include <CUnit/Basic.h>
+#endif
 
 extern int argsRequired(char* arrayName);
 extern char** splitArgs(CSOUND* csound, char* argString);

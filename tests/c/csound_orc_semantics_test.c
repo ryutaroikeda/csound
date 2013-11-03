@@ -12,7 +12,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "csoundCore.h"
-#include "CUnit/Basic.h"
+#if defined(MSVC)
+ #include "Basic.h"
+#else
+ #include "CUnit/Basic.h"
+#endif
 
 extern OENTRIES* find_opcode2(CSOUND* csound, char* opname);
 extern OENTRY* resolve_opcode(CSOUND*, OENTRIES* entries, char* outArgTypes, char* inArgTypes);
