@@ -53,6 +53,8 @@ if(NOT LUAJIT_LIBRARY)
 endif()
 find_path(LUA_H_PATH luajit-2.0/lua.h)
 
+MESSAGE(STATUS ${PYTHON_LIBRARY})
+
 check_deps(BUILD_PYTHON_INTERFACE SWIG_FOUND BUILD_CXX_INTERFACE PYTHONLIBS_FOUND)
 check_deps(BUILD_JAVA_INTERFACE SWIG_FOUND BUILD_CXX_INTERFACE JNI_FOUND JAVA_FOUND)
 check_deps(BUILD_LUA_INTERFACE SWIG_FOUND BUILD_CXX_INTERFACE  LUAJIT_LIBRARY LUA_H_PATH)
@@ -111,7 +113,12 @@ if(BUILD_PYTHON_INTERFACE OR BUILD_JAVA_INTERFACE OR BUILD_LUA_INTERFACE)
         # The java package needs this unset or it will litter us with .java files
         unset(CMAKE_SWIG_OUTDIR)
         INCLUDE_DIRECTORIES(${JNI_INCLUDE_DIRS})
-        set(swigjava_LIBS ${JNI_LIBRARIES} ${CSOUNDLIB} ${LIBSNDFILE_LIBRARY} libcsnd6)
+
+      	if(LINUX)
+            set(swigjava_LIBS ${CSOUNDLIB} ${LIBSNDFILE_LIBRARY} libcsnd6)
+        else()
+            set(swigjava_LIBS ${JNI_LIBRARIES} ${CSOUNDLIB} ${LIBSNDFILE_LIBRARY} libcsnd6)
+        endif()
 
         list(APPEND javaSwigOptions -package csnd6 -includeall)
         SET_SOURCE_FILES_PROPERTIES(java_interface.i PROPERTIES CPLUSPLUS ON)

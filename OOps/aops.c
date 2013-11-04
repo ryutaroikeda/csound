@@ -120,7 +120,7 @@ int aassign(CSOUND *csound, ASSIGN *p)
       }
       memcpy(&p->r[offset], &p->a[offset], (nsmps-offset) * sizeof(MYFLT));
     }
-    else 
+    else
       *p->r =*p->a;
     return OK;
 }
@@ -1343,7 +1343,7 @@ int inarray(CSOUND *csound, INA *p)
     uint32_t m, nsmps =CS_KSMPS, i;
     uint32_t ksmps = nsmps;
 
-    if (n>csound->inchnls) n = csound->inchnls;
+    if ((int)n>csound->inchnls) n = csound->inchnls;
     CSOUND_SPIN_SPINLOCK
     if (UNLIKELY(offset)) for (i = 0; i < n; i++)
                   memset(&data[i*ksmps], '\0', offset*sizeof(MYFLT));
@@ -2058,6 +2058,7 @@ int outRange_i(CSOUND *csound, OUTRANGE *p)
 {
    IGN(csound);
     p->narg = p->INOCOUNT-1;
+
     return OK;
 }
 
@@ -2073,6 +2074,7 @@ int outRange(CSOUND *csound, OUTRANGE *p)
     MYFLT *sp = CS_SPOUT + startChan;
     int narg = p->narg;
 
+
     if (startChan < 0)
       return csound->PerfError(csound, p->h.insdshead,
                                Str("outrg: channel number cannot be < 1 "
@@ -2082,7 +2084,7 @@ int outRange(CSOUND *csound, OUTRANGE *p)
       ara[j] = p->argums[j];
 
     if (!csound->spoutactive) {
-      memset(sp, 0, nsmps * nchnls * sizeof(MYFLT));
+      memset(CS_SPOUT, 0, nsmps * nchnls * sizeof(MYFLT));
       for (n=offset; n<nsmps-early; n++) {
         int i;
         MYFLT *sptemp = sp;

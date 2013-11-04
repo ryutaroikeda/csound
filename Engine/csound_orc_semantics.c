@@ -171,231 +171,6 @@ char* get_array_sub_type(CSOUND* csound, char* arrayName) {
     return cs_strdup(csound, temp);
 }
 
-/* This function gets arg type without checking type table */
-char* get_arg_type(CSOUND* csound, TREE* tree)
-{                   /* find arg type:  d, w, a, k, i, c, p, r, S, B, b, t */
-    char* s;
-    char* t;
-    CS_TYPE* type;
-
-    if (is_expression_node(tree)) {
-      TREE* nodeToCheck = tree;
-
-      if (tree->type == T_ARRAY) {
-        //Note: does not verify here that arg expression is valid for
-        //array_get/array_set
-        //This is due to csound_orc.y only allowing expressions and
-        //functions and not boolean expressions
-        //If a case arises where this needs to be check, code should
-        //be added here
-        return get_array_sub_type(csound, tree->left->value->lexeme);
-      }
-
-      if (tree->type == '?') {
-        char* arg1, *arg2, *ans, *out;
-        char condInTypes[4];
-
-        ans = get_arg_type(csound, tree->left);
-        if (UNLIKELY(ans == NULL || (*ans != 'b' && *ans != 'B'))) {
-          synterr(csound,
-                  Str("non-boolean expression found for ternary operator,"
-                      " line %d\n"), tree->line);
-          return NULL;
-        }
-        arg1 = get_arg_type(csound, tree->right->left);
-        arg2 = get_arg_type(csound, tree->right->right);
-
-        condInTypes[0] = *ans;
-        condInTypes[1] = *arg1;
-        condInTypes[2] = *arg2;
-        condInTypes[3] = 0;
-
-        OENTRIES* entries = find_opcode2(csound, ":cond");
-        out = resolve_opcode_get_outarg(csound, entries, condInTypes);
-
-        if (UNLIKELY(out == NULL)) {
-          synterr(csound,
-                  Str("unable to find ternary operator for "
-                      "types '%s ? %s : %s' line %d\n"),
-                  ans, arg1, arg2, tree->line);
-          return NULL;
-        }
-
-        return cs_strdup(csound, out);
-      }
-
-      char* argTypeRight = get_arg_type(csound, nodeToCheck->right);
-
-      if(nodeToCheck->left != NULL) {
-        char* argTypeLeft = get_arg_type(csound, nodeToCheck->left);
-
-        char* opname = get_expression_opcode_type(csound, nodeToCheck);
-
-        if (UNLIKELY(argTypeLeft == NULL || argTypeRight == NULL)) {
-          synterr(csound,
-                  Str("Unable to verify arg types for expression '%s'\n"),
-                  opname);
-          return NULL;
-        }
-
-        OENTRIES* entries = find_opcode2(csound, opname);
-
-        int len1 = strlen(argTypeLeft);
-        int len2 = strlen(argTypeRight);
-        char* inArgTypes = malloc(len1 + len2 + 1);
-
-        strncpy(inArgTypes, argTypeLeft, len1);
-        strncpy(inArgTypes + len1, argTypeRight, len2);
-
-        inArgTypes[len1 + len2] = '\0';
-
-        char* out = resolve_opcode_get_outarg(csound, entries, inArgTypes);
-
-        if (UNLIKELY(out == NULL)) {
-          synterr(csound,
-                  Str("error: opcode '%s' for expression with arg types "
-                      "%s not found, line %d \n"),
-                  opname, inArgTypes, tree->line);
-          return NULL;
-        }
-
-        return cs_strdup(csound, out);
-
-      } else {
-        return argTypeRight;
-      }
-
-    }
-
-    if (is_boolean_expression_node(tree)) {
-      char* argTypeLeft = get_arg_type(csound, tree->left);
-      char* argTypeRight = get_arg_type(csound, tree->right);
-
-      char* opname = get_boolean_expression_opcode_type(csound, tree);
-
-      if (UNLIKELY(argTypeLeft == NULL || argTypeRight == NULL)) {
-        synterr(csound,
-                Str("Unable to verify arg types for boolean expression '%s'\n"),
-                opname);
-        return NULL;
-      }
-
-      OENTRIES* entries = find_opcode2(csound, opname);
-
-      int len1 = strlen(argTypeLeft);
-      int len2 = strlen(argTypeRight);
-      char* inArgTypes = malloc(len1 + len2 + 1);
-
-      strncpy(inArgTypes, argTypeLeft, len1);
-      strncpy(inArgTypes + len1, argTypeRight, len2);
-
-      inArgTypes[len1 + len2] = '\0';
-
-      char* out = resolve_opcode_get_outarg(csound, entries, inArgTypes);
-
-      if (UNLIKELY(out == NULL)) {
-        synterr(csound, Str("error: boolean expression '%s' with arg "
-                            "types %s not found, line %d \n"),
-                opname, inArgTypes, tree->line);
-        return NULL;
-      }
-
-      return cs_strdup(csound, out);
-
-    }
-
-    switch(tree->type) {
-    case NUMBER_TOKEN:
-    case INTEGER_TOKEN:
-      return cs_strdup(csound, "c");                              /* const */
-    case STRING_TOKEN:
-            return cs_strdup(csound, "S");                /* quoted String */
-    case SRATE_TOKEN:
-    case KRATE_TOKEN:
-    case KSMPS_TOKEN:
-    case ZERODBFS_TOKEN:
-    case NCHNLS_TOKEN:
-    case NCHNLSI_TOKEN:
-      return cs_strdup(csound, "r");                              /* rsvd */
-    case LABEL_TOKEN:
-      //FIXME: Need to review why label token is used so much in parser,
-      //for now treat as T_IDENT
-    case T_IDENT:
-      s = tree->value->lexeme;
-
-      if ((*s >= '1' && *s <= '9') || *s == '.' || *s == '-' || *s == '+' ||
-          (*s == '0' && strcmp(s, "0dbfs") != 0))
-        return cs_strdup(csound, "c");                              /* const */
-      if (*s == '"')
-        return cs_strdup(csound, "S");
-
-      if (pnum(s) >= 0)
-        return cs_strdup(csound, "p");                              /* pnum */
-      if (*s == '#')
-        s++;
-      if (*s == 'g')
-        s++;
-
-      if (*s == '[') {
-        int len = 1;
-        t = s;
-
-        while (*t == '[') {
-          t++;
-          len++;
-        }
-
-        char* retVal = mmalloc(csound, (len + 2) * sizeof(char));
-        memcpy(retVal, s, len);
-        retVal[len] = ']';
-        retVal[len + 1] = '\0';
-
-        return retVal;
-      }
-
-      if (*s == 't') { /* Support legacy t-vars by mapping to k subtypes */
-        return cs_strdup(csound, "[k]");
-      }
-
-      if (*s != 'c') { // <- FIXME: this is here because labels are not
-                       //           checked correctly at the moment
-        type = csoundGetTypeForVarName(csound->typePool, s);
-        if (type != NULL) {
-          return cs_strdup(csound, type->varTypeName);
-        }
-      }
-
-      return cs_strdup(csound, "l"); // assume it is a label
-    case T_ARRAY:
-    case T_ARRAY_IDENT:
-
-      s = tree->value->lexeme;
-
-      if (*s == '#') s++;
-      if (*s == 'g') s++;
-
-      t = s;
-
-      int len = 1;
-      while (*t == '[') {
-        t++;
-        len++;
-      }
-
-      char* retVal = mmalloc(csound, (len + 2) * sizeof(char));
-      memcpy(retVal, s, len);
-      retVal[len] = ']';
-      retVal[len + 1] = '\0';
-
-      return retVal;
-
-    default:
-      csoundWarning(csound, Str("Unknown arg type: %d\n"), tree->type);
-      print_tree(csound, "Arg Tree\n", tree);
-      return NULL;
-    }
-}
-
 char* create_array_arg_type(CSOUND* csound, CS_VARIABLE* arrayVar) {
 
     int i, len = arrayVar->dimensions + 3;
@@ -1278,7 +1053,12 @@ int check_args_exist(CSOUND* csound, TREE* tree, TYPE_TABLE* typeTable) {
             break;
           }
 
-          argType = get_arg_type(csound, current);
+          argType = get_arg_type2(csound, current, typeTable);
+          if(argType==NULL) {
+            synterr(csound,
+              Str("Variable type for %s could not be determined.\n"), varName);
+            return 0;
+          }
 
           //FIXME - this feels like a hack
           if (*argType == 'c' || *argType == 'r' || *argType == 'p') {
@@ -1294,12 +1074,11 @@ int check_args_exist(CSOUND* csound, TREE* tree, TYPE_TABLE* typeTable) {
             if (*varName == 'g')
               var = csoundFindVariableWithName(csound->engineState.varPool,
                                                varName);
-            if(var == NULL)
+            if(var == NULL) {
               synterr(csound,
                       Str("Variable '%s' used before defined\n"), varName);
-            else break;
-
-            return 0;
+              return 0;
+            }
           }
           break;
         case T_ARRAY:
@@ -1315,13 +1094,11 @@ int check_args_exist(CSOUND* csound, TREE* tree, TYPE_TABLE* typeTable) {
             if (var == NULL && *varName == 'g')
               var = csoundFindVariableWithName(csound->engineState.varPool,
                                                varName);
-            if (var == NULL)
+            if (var == NULL) {
               synterr(csound,
                       Str("Variable '%s' used before defined\n"), varName);
-            else break;
-            //            csound->Warning(csound,
-            //            Str("Variable '%s' used before defined\n"), varName);
-            return 0;
+              return 0;
+            }
           }
           break;
         default:
@@ -1499,6 +1276,7 @@ int verify_opcode(CSOUND* csound, TREE* root, TYPE_TABLE* typeTable) {
     char* rightArgString;
     char* opcodeName;
 
+    if(root->value == NULL) return 0;
 
     if (!check_args_exist(csound, root->right, typeTable)) {
       return 0;
@@ -1527,8 +1305,8 @@ int verify_opcode(CSOUND* csound, TREE* root, TYPE_TABLE* typeTable) {
 
     OENTRY* oentry;
     if(root->value->optype == NULL)
-    oentry = resolve_opcode(csound, entries,
-                            leftArgString, rightArgString);
+      oentry = resolve_opcode(csound, entries,
+                              leftArgString, rightArgString);
     /* if there is type annotation, try to resolve it */
     else oentry = resolve_opcode(csound, entries,
                                  root->value->optype, rightArgString);
@@ -1622,7 +1400,7 @@ int verify_if_statement(CSOUND* csound, TREE* root, TYPE_TABLE* typeTable) {
         return 0;
       }
 
-      outArg = get_arg_type(csound, root->left);
+      outArg = get_arg_type2(csound, root->left, typeTable);
 
       return (outArg != NULL && (*outArg == 'b' || *outArg == 'B'));
 
@@ -1647,7 +1425,7 @@ int verify_if_statement(CSOUND* csound, TREE* root, TYPE_TABLE* typeTable) {
           return 0;
         }
 
-        outArg = get_arg_type(csound, current->left);
+        outArg = get_arg_type2(csound, current->left, typeTable);
 
         if (outArg == NULL || (*outArg != 'b' && *outArg != 'B')) {
           return 0;
@@ -1669,7 +1447,7 @@ int verify_until_statement(CSOUND* csound, TREE* root, TYPE_TABLE* typeTable) {
         return 0;
     };
 
-    outArg = get_arg_type(csound, root->left);
+    outArg = get_arg_type2(csound, root->left, typeTable);
 
 
     if (UNLIKELY(outArg == NULL || (*outArg != 'b' && *outArg != 'B'))) {

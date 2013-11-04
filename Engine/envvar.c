@@ -226,7 +226,7 @@ int csoundSetEnv(CSOUND *csound, const char *name, const char *value)
 }
 
 /**
- * Append 'value' to environment variable 'name', using ';' as
+ * Append 'value' to environment variable 'name', using ENVSEP as
  * separator character.
  * Returns CSOUND_SUCCESS on success, and CSOUND_ERROR or CSOUND_MEMORY
  * if the environment variable could not be set for some reason.
@@ -247,13 +247,18 @@ int csoundAppendEnv(CSOUND *csound, const char *name, const char *value)
       return csoundSetEnv(csound, name, value);
     if (value == NULL || value[0] == '\0')
       return CSOUND_SUCCESS;
-    /* allocate new value (+ 2 bytes for ';' and null character) */
+    /* allocate new value (+ 2 bytes for ENVSEP and null character) */
     newval = (char*) mmalloc(csound, (size_t) strlen(oldval)
                              + (size_t) strlen(value) + (size_t) 2);
     /* append to old value */
     strcpy(newval, oldval);     /* These are safe as space calculated above */
-    strcat(newval, ";");
+    //    printf("%d: newval = %s\n", __LINE__, newval);
+    // should be a better way
+    newval[strlen(oldval)]= ENVSEP;
+    newval[strlen(oldval)+1]= '\0';
+    //    printf("%d: newval = %s\n", __LINE__, newval);
     strcat(newval, value);
+    //    printf("%d: newval = %s\n", __LINE__, newval);
     /* set variable */
     retval = csoundSetEnv(csound, name, newval);
     mfree(csound, newval);
@@ -262,7 +267,7 @@ int csoundAppendEnv(CSOUND *csound, const char *name, const char *value)
 }
 
 /**
- * Prepend 'value' to environment variable 'name', using ';' as
+ * Prepend 'value' to environment variable 'name', using ENVSEP as
  * separator character.
  * Returns CSOUND_SUCCESS on success, and CSOUND_ERROR or CSOUND_MEMORY
  * if the environment variable could not be set for some reason.
@@ -288,8 +293,12 @@ int csoundPrependEnv(CSOUND *csound, const char *name, const char *value)
                                      + (size_t) strlen(value) + (size_t) 2);
     /* prepend to old value */
     strcpy(newval, value);
-    strcat(newval, ";");
+    //    printf("%d: newval = %s\n", __LINE__,  newval);
+    newval[strlen(value)]= ENVSEP;
+    newval[strlen(value)+1]= '\0';
+    //    printf("%d: newval = %s\n", __LINE__,  newval);
     strcat(newval, oldval);
+    //    printf("%d: newval = %s\n", __LINE__,  newval);
     /* set variable */
     retval = csoundSetEnv(csound, name, newval);
     mfree(csound, newval);
@@ -405,7 +414,7 @@ char **csoundGetSearchPathFromEnv(CSOUND *csound, const char *envList)
     len = (int) strlen(envList);
     /* split environment variable list to tokens */
     for (i = j = 0; i <= len; i++) {
-      if (envList[i] == ';' || envList[i] == '\0') {
+      if (envList[i] == ';' || envList[i] == ':' || envList[i] == '\0') {
         if (i > j) {
           tmp = (nameChain_t*) mmalloc(csound, sizeof(nameChain_t) + (i - j));
           for (k = 0; j < i; j++, k++)
@@ -442,7 +451,7 @@ char **csoundGetSearchPathFromEnv(CSOUND *csound, const char *envList)
       else
         len = -1;
       for (i = j = 0; i <= len; i++) {
-        if (s[i] == ';' || s[i] == '\0') {
+        if (s[i] == ';' || s[i] == ':' || s[i] == '\0') {
           if (i > j) {
             tmp = (nameChain_t*) mmalloc(csound, sizeof(nameChain_t)
                                                  + (i - j) + 1);
@@ -673,6 +682,8 @@ char *csoundGetDirectoryForPath(CSOUND* csound, const char * path) {
     char *cwd;
     int  len;
 
+    if(path == NULL) return NULL;
+
     char *tempPath = csoundConvertPathname(csound, path);
 
     char *lastIndex = strrchr(tempPath, DIRSEP);
@@ -880,9 +891,9 @@ static int csoundFindFile_Fd(CSOUND *csound, char **fullName,
  * and if it is still not found, a pathname list that is created the
  * following way is searched:
  *   1. if envList is NULL or empty, no directories are searched
- *   2. envList is parsed as a ';' separated list of environment variable
- *      names, and all environment variables are expanded and expected to
- *      contain a ';' separated list of directory names
+ *   2. envList is parsed as a ';' or ':' separated list of environment
+ *      variable names, and all environment variables are expanded and
+ *      expected to contain a ';' or ':' separated list of directory names
  *   2. all directories in the resulting pathname list are searched, starting
  *      from the last and towards the first one, and the directory where the
  *      file is found first will be used

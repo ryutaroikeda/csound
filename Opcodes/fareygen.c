@@ -302,4 +302,3 @@ static NGFENS farey_fgens[] = {
 };
 
 FLINKAGE_BUILTIN(farey_fgens)
-

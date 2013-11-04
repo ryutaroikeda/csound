@@ -571,8 +571,9 @@ INSTRTXT *create_instrument0(CSOUND *csound, TREE *root,
           //constndx?  Not sure if necessary due to assumption
           //that tree will be verified
           MYFLT val = (MYFLT) cs_strtod(current->right->value->lexeme,
-                                       NULL);
-
+                                        NULL);
+          // systems constants get set here and are not
+          // compiled into i-time code
           myflt_pool_find_or_add(csound, csound->engineState.constantsPool, val);
 
           /* modify otran defaults*/
@@ -600,9 +601,10 @@ INSTRTXT *create_instrument0(CSOUND *csound, TREE *root,
           }
 
         }
-
+        else{
         op->nxtop = create_opcode(csound, current, ip, engineState);
         op = last_optxt(op);
+        }
 
       }
       current = current->next;
@@ -649,6 +651,7 @@ INSTRTXT *create_instrument0(CSOUND *csound, TREE *root,
     csound->ekr = kr;
     if(_0dbfs < 0) csound->e0dbfs = DFLT_DBFS;
     else csound->e0dbfs = _0dbfs;
+
 
     OPARMS  *O = csound->oparms;
     if (UNLIKELY(csound->e0dbfs <= FL(0.0))){
@@ -756,10 +759,16 @@ INSTRTXT *create_global_instrument(CSOUND *csound, TREE *root,
 
     while (current != NULL) {
       if (current->type != INSTR_TOKEN && current->type != UDO_TOKEN) {
+        OENTRY* oentry = (OENTRY*)current->markup;
         if (UNLIKELY(PARSER_DEBUG))
           csound->Message(csound, "In INSTR GLOBAL: %s\n", current->value->lexeme);
+        if (current->type == '='
+            && strcmp(oentry->opname, "=.r") == 0)
+         csound->Warning(csound, "system constants can only be set once\n");
+        else {
         op->nxtop = create_opcode(csound, current, ip, engineState);
         op = last_optxt(op);
+        }
       }
       current = current->next;
     }
@@ -1534,7 +1543,9 @@ PUBLIC int csoundCompileTree(CSOUND *csound, TREE *root)
         break;
       case T_OPCODE:
       case T_OPCODE0:
+      case LABEL:
         break;
+
       default:
         csound->Message(csound,
                         Str("Unknown TREE node of type %d found in root.\n"),
@@ -1610,6 +1621,7 @@ PUBLIC int csoundCompileTree(CSOUND *csound, TREE *root)
       *((MYFLT *)(var->memBlock)) = csound->inchnls;
       var = csoundFindVariableWithName(engineState->varPool, "0dbfs");
       *((MYFLT *)(var->memBlock)) = csound->e0dbfs;
+
 
     }
 
@@ -1750,9 +1762,12 @@ static void insprep(CSOUND *csound, INSTRTXT *tp, ENGINE_STATE *engineState)
           ARG* inArgs = ttp->inArgs;
           //CS_VARIABLE* var;
 
-          //csound->Message(csound, "PSET: isno=%d, pmax=%d\n", insno, ip->pmax);
-          csound->Message(csound, "PSET: isno=[fixme], pmax=%d\n", tp->pmax);
-          if((n = ttp->inArgCount) != tp->pmax) {
+          if (tp->insname)
+            csound->Message(csound, "PSET: isname=\"%s\", pmax=%d\n",
+                            tp->insname, tp->pmax);
+          else
+            csound->Message(csound, "PSET: isno=??, pmax=%d\n", tp->pmax);
+          if ((n = ttp->inArgCount) != tp->pmax) {
             //csound->Warning(csound, Str("i%d pset args != pmax"), (int) insno);
             csound->Warning(csound, Str("i[fixme] pset args != pmax"));
             if (n < tp->pmax) n = tp->pmax; /* cf pset, pmax    */
@@ -1788,7 +1803,7 @@ static void insprep(CSOUND *csound, INSTRTXT *tp, ENGINE_STATE *engineState)
                 break;
             }
 
-            csound->Message(csound, "..%f..", *(fp1-1));
+            //            csound->Message(csound, "..%f..", *(fp1-1));
           }
 
           csound->Message(csound, "\n");
