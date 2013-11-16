@@ -791,15 +791,21 @@ if(SCORE_PARSER)
     set(PRELEX_SCOSRC ${CMAKE_CURRENT_SOURCE_DIR}/Engine/csound_prs.lex)
     set(PRELEX_SCOOUT ${CMAKE_CURRENT_BINARY_DIR}/csound_prslex.c)
 
+	if(MSVC)
+		set(FLEX_ARGS --nounistd)
+	else ()
+		set(FLEX_ARGS "")
+	endif()
+
     add_custom_command(
         SOURCE ${LEX_SCOSRC}
-        COMMAND ${FLEX_EXECUTABLE} ARGS -B -t ${LEX_SCOSRC} > ${LEX_SCOOUT} 
+        COMMAND ${FLEX_EXECUTABLE} ARGS ${FLEX_ARGS} -B -t ${LEX_SCOSRC} > ${LEX_SCOOUT} 
         TARGET NewScoParser
         OUTPUTS ${LEX_SCOOUT})
 
     add_custom_command(
         SOURCE ${PRELEX_SCOSRC}
-        COMMAND ${FLEX_EXECUTABLE} ARGS -B ${PRELEX_SCOSRC} > ${PRELEX_SCOOUT} 
+        COMMAND ${FLEX_EXECUTABLE} ARGS ${FLEX_ARGS} -B ${PRELEX_SCOSRC} > ${PRELEX_SCOOUT} 
         TARGET NewScoParser
         OUTPUTS ${PRELEXSCO_OUT})
 

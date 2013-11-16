@@ -18,9 +18,17 @@ find_package(SWIG)
 find_package(PythonLibs)
 find_library(LUAJIT_LIBRARY luajit)
 if(NOT LUAJIT_LIBRARY)
-    find_library(LUAJIT_LIBRARY luajit-5.1)
+    if(MSVC)
+        find_library(LUAJIT_LIBRARY lua51)
+    else()
+        find_library(LUAJIT_LIBRARY luajit-5.1)
+    endif()
 endif()
-find_path(LUA_H_PATH luajit-2.0/lua.h)
+if(MSVC)
+    find_path(LUA_H_PATH lua.h)
+else()
+    find_path(LUA_H_PATH luajit-2.0/lua.h)
+endif()
 
 find_library(PORTSMF_LIBRARY portSMF)
 
@@ -144,7 +152,11 @@ if(BUILD_CSOUND_AC)
 
     if(BUILD_CSOUND_AC_LUA_INTERFACE)
         message(STATUS "Building CsoundAC Lua interface")
-        include_directories(${LUA_H_PATH}/luajit-2.0)
+        if(MSVC)
+            include_directories(${LUA_H_PATH})
+        else()
+            include_directories(${LUA_H_PATH}/luajit-2.0)
+        endif()
 
         SET_SOURCE_FILES_PROPERTIES(luaCsoundAC.i
             PROPERTIES CPLUSPLUS ON

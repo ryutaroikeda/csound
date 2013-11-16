@@ -239,7 +239,7 @@ public:
     // to preserve the clarity of the original code.
     uint32_t offset = opds.insdshead->ksmps_offset;
     uint32_t early  = opds.insdshead->ksmps_no_end;
-    uint32_t n, nsmps = CS_KSMPS;
+    uint32_t nsmps = CS_KSMPS;
     if (UNLIKELY(offset)) {
       memset(I3, '\0', offset*sizeof(MYFLT));
       memset(V1, '\0', offset*sizeof(MYFLT));

@@ -36,6 +36,10 @@ extern "C"
 #include <lualib.h>
 }
 
+#if _MSC_VER
+	#define snprintf _snprintf
+#endif
+
 /**
  * L U A   O P C O D E S   F O R   C S O U N D
  *
