@@ -638,7 +638,8 @@ set(libcsound_SRCS
     Top/opcode.c
     Top/threads.c
     Top/utility.c
-    Top/threadsafe.c)
+    Top/threadsafe.c
+    Top/server.c)
 
 set(stdopcod_SRCS 
     Opcodes/ambicode.c      
@@ -1136,6 +1137,7 @@ add_subdirectory(po)
 add_subdirectory(tests/c)
 add_subdirectory(tests/commandline)
 add_subdirectory(tests/regression)
+add_subdirectory(tests/soak)
 
 # uninstall target
 configure_file(
