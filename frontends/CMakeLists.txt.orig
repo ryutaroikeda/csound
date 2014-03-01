@@ -3,6 +3,7 @@ option(BUILD_CSBEATS "Build the beats score frontend" ON)
 option(BUILD_WINSOUND "Build the Winsound frontend. Requires FLTK headers and libs." OFF)
 option(BUILD_CSOUND_VST "Build the CsoundVST frontend. Requires the Steinberg VST SDK 2.3." OFF)
 
+<<<<<<< HEAD
   # first, try to use fltk-config for fltk >= 1.3 (FindFLTK is buggy
   # on Unix, where e.g. xft and xinerama options are not dealt with)
   find_program(FLTK_CONFIG_SCRIPT fltk-config)
@@ -26,17 +27,14 @@ option(BUILD_CSOUND_VST "Build the CsoundVST frontend. Requires the Steinberg VS
       string(REGEX MATCH "fltk[_ ]png" FLTK_PNG ${FLTK_LIBRARIES})
     endif(FLTK_VERSION GREATER 1.1)
   endif(FLTK_CONFIG_SCRIPT)
-<<<<<<< HEAD
-  
-  if(NOT HAVE_FLTK)
-=======
   if(NOT HAVE_FLTK)
 
->>>>>>> origin/develop
     set(FLTK_SKIP_OPENGL true)
     find_package(FLTK)
   endif()
 
+=======
+>>>>>>> origin/develop
 find_package(FLEX)
 find_package(BISON)
 
@@ -90,15 +88,12 @@ check_deps(BUILD_CSBEATS FLEX_EXECUTABLE BISON_EXECUTABLE)
 
 if(BUILD_CSBEATS)
 
-<<<<<<< HEAD
 	if(MSVC)
 		set(FLEX_ARGS "--nounistd")
 	else ()
 		set(FLEX_ARGS "")
 	endif()
     
-=======
->>>>>>> origin/develop
     BISON_TARGET(csbeats_PARSER beats/beats.y ${CMAKE_CURRENT_BINARY_DIR}/beats.tab.c)
     FLEX_TARGET(csbeats_SCANNER beats/beats.l ${CMAKE_CURRENT_BINARY_DIR}/beatslex.yy.c COMPILE_FLAGS ${FLEX_ARGS})
 
@@ -112,11 +107,11 @@ if(BUILD_CSBEATS)
         ${FLEX_csbeats_SCANNER_OUTPUTS}
         ${BISON_csbeats_PARSER_OUTPUTS})
 
-<<<<<<< HEAD
-	make_executable(csbeats "${csbeats_SRCS}" "m")
-=======
-    make_executable(csbeats "${csbeats_SRCS}" "m")
->>>>>>> origin/develop
+	if(MSVC)
+		make_executable(csbeats "${csbeats_SRCS}" "")
+	else()
+		make_executable(csbeats "${csbeats_SRCS}" "m")
+	endif()
 
 endif()
 
@@ -166,7 +161,7 @@ if(BUILD_WINSOUND)
     set(WINSOUND_H ${CMAKE_CURRENT_BINARY_DIR}/winsound.h)
     set_source_files_properties(${WINSOUND_CXX} GENERATED)
     set_source_files_properties(${WINSOUND_H} GENERATED)
-    add_custom_target(winsound_fl COMMAND fluid -c -o ${WINSOUND_CXX} -h $ --{WINSOUND_H} ${WINSOUND_FL})
+    add_custom_target(winsound_fl COMMAND fluid -c -o ${WINSOUND_CXX} -h  ${WINSOUND_H} ${WINSOUND_FL})
 
     set(WINSOUND_SRCS ${WINSOUND_CXX} winsound/main.cxx)
 
