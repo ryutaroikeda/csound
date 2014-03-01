@@ -233,6 +233,7 @@ int serialport_init(CSOUND *csound, const char* serialport, int baud)
     toptions.c_cc[VTIME] = 20;
 
     if ( tcsetattr(fd, TCSANOW, &toptions) < 0) {
+      close(fd);
       perror("init_serialport: Couldn't set term attributes");
       return -1;
     }
@@ -413,7 +414,7 @@ int serialRead(CSOUND *csound, SERIALREAD *p)
 
 int serialPrint(CSOUND *csound, SERIALPRINT *p)
 {
-    char str[32768];
+    char str[32769];
     ssize_t bytes;
 #ifdef WIN32
     HANDLE port = get_port(csound, (int)*p->port);
@@ -423,7 +424,7 @@ int serialPrint(CSOUND *csound, SERIALPRINT *p)
     bytes  = read((int)*p->port, str, 32768);
 #endif
     if (bytes > 0) {
-      str[bytes] = 0; // terminate
+      str[bytes] = '\0'; // terminate
       csound->MessageS(csound, CSOUNDMSG_ORCH, str);
     }
     return OK;
