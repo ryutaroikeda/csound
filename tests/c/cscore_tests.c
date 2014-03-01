@@ -43,7 +43,6 @@ void cscore(CSOUND *cs)
       cscorePutString(cs, "e");
       EVLIST *ev = cscoreListGetUntil(cs, 100);
 
-
       return;
 }
 
@@ -54,13 +53,19 @@ void test_cscore(void)
 
     FILE *in_file = fopen("cscore_score.sco", "r");
     FILE *out_file = fopen("cscore_out.sco", "w");
-    csoundInitializeCscore(csound, in_file, out_file);
-    cscore(csound);
+
+	if (in_file == NULL || out_file == NULL) {
+		CU_ASSERT(0);
+	}
+	else {
+		csoundInitializeCscore(csound, in_file, out_file);
+		cscore(csound);
+	}
+
     csoundCleanup(csound);
     csoundDestroy(csound);
 
     CU_ASSERT(1);
-
 }
 
 int main()
@@ -79,8 +84,7 @@ int main()
    }
 
    /* add the tests to the suite */
-   if ((NULL == CU_add_test(pSuite, "Cscore test", test_cscore))
-       )
+   if (NULL == CU_add_test(pSuite, "Cscore test", test_cscore))
    {
       CU_cleanup_registry();
       return CU_get_error();

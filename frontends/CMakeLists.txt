@@ -104,7 +104,11 @@ if(BUILD_CSBEATS)
         ${FLEX_csbeats_SCANNER_OUTPUTS}
         ${BISON_csbeats_PARSER_OUTPUTS})
 
-    make_executable(csbeats "${csbeats_SRCS}" "m")
+	if(MSVC)
+		make_executable(csbeats "${csbeats_SRCS}" "")
+	else()
+		make_executable(csbeats "${csbeats_SRCS}" "m")
+	endif()
 
 endif()
 

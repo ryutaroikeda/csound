@@ -857,7 +857,8 @@ PUBLIC int csoundInitializeCscore(CSOUND *csound, FILE* insco, FILE* outsco)
     if (insco != NULL) {
       CORFIL *inf = corfile_create_w();
       int c;
-      while ((c=getc(insco))!=EOF) corfile_putc(c, inf);
+      while ((c=getc(insco))!=EOF) 
+		  corfile_putc(c, inf);
       corfile_rewind(inf);
       csound->scstr = inf;
     }

@@ -2154,7 +2154,7 @@ int lpf18db(CSOUND *csound, LPF18 *p)
     MYFLT lastin = p->lastin;
     double value = 0.0;
     int   flag = 1;
-    MYFLT lfc, lrs, kres, kfcn, kp, kp1,  kp1h;
+    MYFLT lfc = 0, lrs = 0, kres, kfcn, kp, kp1,  kp1h;
     double lds = 0.0;
 
     if (UNLIKELY(offset)) memset(ar, '\0', offset*sizeof(MYFLT));
