@@ -1034,7 +1034,7 @@ extern "C" {
       *       malloc(n*sizeof(CS_AUDIODEVICE));
       *   csoundGetAudioDevList(csound,devs,1);
       *   for(i=0; i < n; i++)
-      *       csound-Message(csound, " %d: %s (%s)\n",
+      *       csound->Message(csound, " %d: %s (%s)\n",
       *             i, devs[i].device_id, devs[i].device_name);
       *   free(devs);
       * \endcode
@@ -1184,7 +1184,7 @@ extern "C" {
      *  It can be called repeatedly, with the new score events
      *  being added to the currently scheduled ones.
      */
-    PUBLIC int csoundReadScore(CSOUND *csound, char *str);
+    PUBLIC int csoundReadScore(CSOUND *csound, const char *str);
 
     /**
      * Returns the current score time in seconds

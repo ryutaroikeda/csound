@@ -394,7 +394,7 @@ PUBLIC int csoundStart(CSOUND *csound) // DEBUG
     if (csoundInitModules(csound) != 0)
            csound->LongJmp(csound, 1);
     csound->modules_loaded = 1;
-   }
+    }
     if (csound->instr0 == NULL) { /* compile dummy instr0 to allow csound to
                                      start with no orchestra */
         csoundCompileOrc(csound, "idummy = 0 \n");
@@ -501,8 +501,8 @@ PUBLIC int csoundCompileCsd(CSOUND *csound, char *str) {
     char *argv[2] = { "csound", (char *) str };
     int argc = 2;
     return csoundCompile(csound, argc, argv);
-  } 
-  else { 
+  }
+  else {
     int res = read_unified_file2(csound, (char *) str);
    if(res) {
     res = csoundCompileOrc(csound, NULL);

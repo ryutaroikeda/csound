@@ -1,18 +1,21 @@
-CSOUND
-Version 6.01
+# CSOUND AND CSOUND VST
+Version 6.02
+
+[![Build Status](https://travis-ci.org/csound/csound.svg?branch=develop)](https://travis-ci.org/csound/csound)
 
 A user-programmable and user-extensible sound processing language
 and software synthesizer.
 
 Csound is copyright (c) 1991 Barry Vercoe, John ffitch.
-CsoundAC is copyright (c) 2001 by Michael Gogins.
+CsoundVST is copyright (c) 2001 by Michael Gogins.
+VST PlugIn Interface Technology by Steinberg Soft- und Hardware GmbH
 
-Csound is free software; you can redistribute it
-and/or modify it under the terms of the GNU Lesser General Public
+Csound and CsoundVST are free software; you can redistribute them
+and/or modify them under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.
 
-Csound is distributed in the hope that it will be useful,
+Csound and CsoundVST are distributed in the hope that they will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
@@ -22,13 +25,17 @@ License along with this software; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 02111-1307 USA
 
-GETTING STARTED
+# GETTING STARTED
 
 CsoundQt, a graphical shell for Csound, makes an excellent place to begin 
 the exploration of Csound, especially because CsoundQt has an extensive menu 
 of built-in examples that show off Csound's capabilities. Many musicians make 
 CsoundQt their main Csound environment, although there are other excellent 
 environments. CsoundQt runs not only Csound code, but also Python scripts.
+
+CsoundVST is a VST plugin version of Csound. Please see "A Csound Tutorial"
+herein for instructions on use. CsoundVST does not support custom VST GUIs,
+but allows the Csound orchestra to be edited and saved in the VST host.
 
 The tutorial/tutorial.pdf file is an illustrated tutorial of how to 
 find, install, configure, and use Csound. To get started with 
@@ -52,49 +59,46 @@ The doc/manual/api/index.html file is the front page to the C/C++
 Csound and Csound API application programming interfaces reference,
 but it is also helpful when programming Csound in other languages.
 
-INSTALLATION
-
-See the Csound documentation in the doc directory,
-or go to http://csounds.com or http://sourceforge.net/projects/csound.
-
-CONTRIBUTORS
+# CONTRIBUTORS
 
 Csound contains contributions from musicians, scientists, and programmers
 from around the world. They include (but are not limited to):
 
-Allan Lee
-Bill Gardner
-Bill Verplank
-Dan Ellis
-David Macintyre
-Eli Breder
-Gabriel Maldonado
-Greg Sullivan
-Hans Mikelson
-Istvan Varga
-Jean PichÈ
-John ffitch
-John Ramsdell
-Marc Resibois
-Mark Dolson
-Matt Ingalls
-Max Mathews
-Michael Casey
-Michael Clark
-Michael Gogins
-Mike Berry
-Paris Smaragdis
-Perry Cook
-Peter Neub‰cker
-Peter Nix
-Rasmus Ekman
-Richard Dobson
-Richard Karpen
-Rob Shaw
-Robin Whittle
-Sean Costello
-Steven Yi
-Tom Erbe
-Victor Lazzarini
-Ville Pulkki
-
+* Allan Lee
+* Bill Gardner
+* Bill Verplank
+* Dan Ellis
+* David Macintyre
+* Eli Breder
+* Gabriel Maldonado
+* Greg Sullivan
+* Hans Mikelson
+* Istvan Varga
+* Jean Pich√©
+* John ffitch
+* John Ramsdell
+* Marc Resibois
+* Mark Dolson
+* Matt Ingalls
+* Max Mathews
+* Michael Casey
+* Michael Clark
+* Michael Gogins
+* Mike Berry
+* Paris Smaragdis
+* Perry Cook
+* Peter Neub√§cker
+* Peter Nix
+* Rasmus Ekman
+* Richard Dobson
+* Richard Karpen
+* Rob Shaw
+* Robin Whittle
+* Sean Costello
+* Steven Yi
+* Tom Erbe
+* Victor Lazzarini
+* Ville Pulkki
+* Andres Cabrera
+* Felipe Sataler
+* Ian McCurdy

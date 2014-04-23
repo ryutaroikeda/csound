@@ -90,6 +90,7 @@ uint64_t make_location(PRE_PARM *qq)
 // Code to add #includes of UDOs
 void add_include_udo_dir(CORFIL *xx)
 {
+#if defined(HAVE_DIRENT_H)
     char *dir = getenv("CS_UDO_DIR");
     char buff[1024];
     if (dir) {
@@ -121,6 +122,7 @@ void add_include_udo_dir(CORFIL *xx)
       }
     }
     //printf("Giving\n%s", corfile_body(xx));
+#endif
 }
 
 TREE *csoundParseOrc(CSOUND *csound, const char *str)
@@ -228,8 +230,8 @@ TREE *csoundParseOrc(CSOUND *csound, const char *str)
       typeTable = csound->Malloc(csound, sizeof(TYPE_TABLE));
       typeTable->udos = NULL;
 
-      typeTable->globalPool = csound->Calloc(csound, sizeof(CS_VAR_POOL));
-      typeTable->instr0LocalPool = csound->Calloc(csound, sizeof(CS_VAR_POOL));
+      typeTable->globalPool = csoundCreateVarPool(csound);
+      typeTable->instr0LocalPool = csoundCreateVarPool(csound);
 
       typeTable->localPool = typeTable->instr0LocalPool;
       typeTable->labelList = NULL;
@@ -269,6 +271,13 @@ TREE *csoundParseOrc(CSOUND *csound, const char *str)
         csound->ErrorMsg(csound, Str("Stopping on parser failure"));
         csoundDeleteTree(csound, astTree);
         if (typeTable != NULL) {
+          csoundFreeVarPool(csound, typeTable->globalPool);
+          if(typeTable->instr0LocalPool != NULL) {
+            csoundFreeVarPool(csound, typeTable->instr0LocalPool);
+          }
+          if(typeTable->localPool != typeTable->instr0LocalPool) {
+            csoundFreeVarPool(csound, typeTable->localPool);
+          }
           csound->Free(csound, typeTable);
         }
         return NULL;

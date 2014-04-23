@@ -181,6 +181,10 @@ if(USE_COMPILER_OPTIMIZATIONS)
 include(cmake/CompilerOptimizations.cmake)
 endif()
 
+if(APPLE)
+set(OSX_VERSION " ")
+endif()
+
 # Include this after the install path definitions so we can override them here.
 # Also after function definitions so we can use them there
 find_file(CUSTOM_CMAKE "Custom.cmake" HINTS ${CMAKE_HOME_DIRECTORY})
@@ -241,22 +245,13 @@ if(WIN32)
         ws2_32
         wsock32)
 
-        odbc32 
-        odbccp32 
-        ole32 
-        oleaut32 
-        shell32             
-        user32 
-        uuid             
-        winmm 
-        winspool 
-        ws2_32 
-        wsock32)
+if(NOT MSVC)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mstackrealign")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mstackrealign")
+endif()
 
-	if(NOT MSVC)
-		list(APPEND CSOUND_WINDOWS_LIBRARIES pthread)
-	endif()
-    
+
+
 endif(WIN32)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -320,8 +315,9 @@ if(APPLE)
     set(CMAKE_OSX_SYSROOT ${DEFAULT_OSX_SYSROOT})
   endif()
 
-  if(EXISTS ${CMAKE_OSX_SYSROOT})
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.6)
+  if(CMAKE_OSX_SYSROOT AND NOT CMAKE_OSX_SYSROOT MATCHES ".*OSX10.6.*") 
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
+    message(STATUS "OSX: Setting Depolyment Target to 10.7")
   endif()
 
 endif()
@@ -424,7 +420,7 @@ if(NOT PTHREAD_LIBRARY AND WIN32)
     find_library(PTHREAD_LIBRARY pthreadVC2)
 endif()
 
-if(NOT PTHREAD_LIBRARY)
+if(NOT PTHREAD_LIBRARY AND NOT EMSCRIPTEN)
     message(FATAL_ERROR "Csound requires the pthread library")
 endif()
 
@@ -546,6 +542,7 @@ include_directories(./Engine)
 include_directories(./)
 
 #checking pthread functions
+if(PTHREAD_LIBRARY)
 check_function_exists(pthread_spin_lock PTHREAD_SPIN_LOCK_EXISTS)
 check_function_exists(pthread_barrier_init PTHREAD_BARRIER_INIT_EXISTS)
 
@@ -555,6 +552,7 @@ endif()
 
 if(PTHREAD_BARRIER_INIT_EXISTS)
    list(APPEND libcsound_CFLAGS -DHAVE_PTHREAD_BARRIER_INIT)
+endif()
 endif()
 
 
@@ -700,6 +698,7 @@ set(libcsound_SRCS
     Opcodes/tl/sc_noise.c
     Opcodes/afilters.c
     Top/argdecode.c
+    Top/csdebug.c
     Top/cscore_internal.c
     Top/cscorfns.c
     Top/csmodule.c
@@ -1063,9 +1062,15 @@ install(TARGETS ${CSOUNDLIB}
     ARCHIVE DESTINATION "${LIBRARY_INSTALL_DIR}"
     FRAMEWORK DESTINATION "${CS_FRAMEWORK_DEST}")
 
-set(libcsound_LIBS
+if(EMSCRIPTEN) 
+  include_directories(emscripten/deps/libsndfile-1.0.25/src/)
+  set(libcsound_LIBS
+    ${LIBSNDFILE_LIBRARY})
+else()
+  set(libcsound_LIBS
     ${LIBSNDFILE_LIBRARY}
     ${PTHREAD_LIBRARY})
+endif()
 
 if(WIN32)
     list(APPEND libcsound_LIBS "${CSOUND_WINDOWS_LIBRARIES}")
@@ -1234,7 +1239,7 @@ add_custom_target(uninstall
 
 # target etags/tags
 if(UNIX)
-  add_custom_target(tags COMMAND etags `find ${CMAKE_CURRENT_SOURCE_DIR} -name \\*.cc -or -name \\*.hh -or -name \\*.cpp -or -name \\*.h -or -name \\*.c | grep -v " "`)
+  add_custom_target(tags COMMAND etags `find ${CMAKE_CURRENT_SOURCE_DIR} -name \\*.cc -or -name \\*.hh -or -name \\*.cpp -or -name \\*.h -or -name \\*.c | grep -v " " `)
   add_custom_target(etags DEPENDS tags)
 endif()
 

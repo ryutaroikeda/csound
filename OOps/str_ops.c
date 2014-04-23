@@ -162,6 +162,7 @@ int strcpy_opcode_S(CSOUND *csound, STRCPY_OP *p)
     if (p->r->data == NULL) {
       p->r->data =  cs_strdup(csound, newVal);
       p->r->size =  strlen(p->str->data) + 1;
+      // printf("str:%p %p \n", p->r, p->r->data);
         return OK;
     }
     if (p->r->data == p->str->data)
@@ -172,7 +173,10 @@ int strcpy_opcode_S(CSOUND *csound, STRCPY_OP *p)
         p->r->size = strlen(newVal) + 1;
 
     }
-    else strcpy((char*) p->r->data, newVal);
+    else {
+      strcpy((char*) p->r->data, newVal);
+      // printf("str:%p %p \n", p->r, p->r->data);
+    }
 
     return OK;
 }
@@ -205,7 +209,7 @@ int str_changed(CSOUND *csound, STRCHGD *p)
 
 int str_changed_k(CSOUND *csound, STRCHGD *p)
 {
-    if (p->mem == NULL || strcmp(p->str->data, p->mem)!=0) {
+  if (p->str->data && ( p->mem == NULL || strcmp(p->str->data, p->mem)!=0)) {
       csound->Free(csound, p->mem);
       p->mem = cs_strdup(csound, p->str->data);
       *p->r = 1;
@@ -393,12 +397,13 @@ sprintf_opcode_(CSOUND *csound,
             return StrOp_ErrMsg(p, "output argument may not be "
                                    "the same as any of the input args");
           }
-          if (((STRINGDAT*)parm)->size >= maxChars) {
+          if ((((STRINGDAT*)parm)->size+strlen(strseg)) >= (unsigned)maxChars) {
             int offs = outstring - str->data;
             str->data = csound->ReAlloc(csound, str->data,
-                                 str->size  + ((STRINGDAT*)parm)->size);
-            str->size += ((STRINGDAT*)parm)->size;
-            maxChars += ((STRINGDAT*)parm)->size;
+                                        str->size  + ((STRINGDAT*)parm)->size +
+                                        strlen(strseg));
+            str->size += ((STRINGDAT*)parm)->size + strlen(strseg);
+            maxChars += ((STRINGDAT*)parm)->size + strlen(strseg);
             outstring = str->data + offs;
           }
           n = snprintf(outstring, maxChars, strseg, ((STRINGDAT*)parm)->data);
@@ -440,6 +445,7 @@ int sprintf_opcode(CSOUND *csound, SPRINTF_OP *p)
 {
     if (p->r->data == NULL) {
       int size = p->sfmt->size+ 10*((int) p->INOCOUNT);
+      /* this 10 is 1n incorrect guess which is OK with numbers*/
       p->r->data = csound->Calloc(csound, size);
       p->r->size = size;
     }

@@ -327,7 +327,7 @@ static int delete_channel_db(CSOUND *csound, void *p)
       cs_cons_free(csound, head);
     }
 
-    cs_hash_table_free_complete(csound, csound->chn_db);
+    cs_hash_table_mfree_complete(csound, csound->chn_db);
     csound->chn_db = NULL;
     return 0;
 }
@@ -451,8 +451,8 @@ PUBLIC int csoundGetChannelDatasize(CSOUND *csound, const char *name){
       /* the reason for this is that if chnexport is
          used with strings, the datasize might become
          invalid */
-      if (pp->type == CSOUND_STRING_CHANNEL)
-        return strlen((char *) pp->data) + 1;
+      if ((pp->type & CSOUND_STRING_CHANNEL) == CSOUND_STRING_CHANNEL)
+        return ((STRINGDAT*)pp->data)->size;
       return pp->datasize;
     }
 }
@@ -773,7 +773,7 @@ int chnget_opcode_perf_S(CSOUND *csound, CHNGET *p)
     if (UNLIKELY(err))
       return print_chn_err(p, err);
 
-    if( ((STRINGDAT *) p->fp)->data != NULL &&
+    if(s != NULL && ((STRINGDAT *) p->fp)->data != NULL &&
       strcmp(s, ((STRINGDAT *) p->fp)->data) == 0) return OK;
 
     csoundSpinLock(p->lock);
