@@ -188,3 +188,5 @@ nacl/csound_orcparse.c
 nacl/csound_orcparse.h
 nacl/csound_prelex.c
 nacl/pnacl
+win/dependencies/
+win/nuget.exe

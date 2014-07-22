@@ -34,7 +34,10 @@ typedef unsigned int u_int32_t;
 #include <arpa/inet.h>
 #endif
 
-
+#ifdef MSVC
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
 
 typedef struct {
   int port;
