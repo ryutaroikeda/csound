@@ -41,7 +41,7 @@ ksmps offset] = number of k-cycle before breakpoint is hit
 
 using namespace std;
 
-void brkpt_cb(CSOUND *csound, int line, double instr, void *userdata);
+void brkpt_cb(CSOUND *csound, debug_bkpt_info_t *bkpt_info, void *userdata);
 
 int main(int argc, char *argv[])
 {
@@ -50,91 +50,52 @@ int main(int argc, char *argv[])
         cout << argv[0] << " [filename.csd] [instrument number] [ksmps offset]" << endl;
         return -1;
     }
-    int break_count = 0;
+
+    int ksmpsOffset = atoi(argv[3]);
+
     Csound* csound = new Csound();
     csound->Compile(2,argv);
     csound->Start();
     csoundDebuggerInit(csound->GetCsound());
-    int ksmpsOffset = atoi(argv[3]);
-    csoundSetBreakpointCallback(csound->GetCsound(), brkpt_cb, (void *) &ksmpsOffset);
-    int ksmpsCount = 0;
+    csoundSetBreakpointCallback(csound->GetCsound(), brkpt_cb, NULL);
 
     cout << "Csound filename: " << argv[1] << '\n';
     cout << "Instr number:" << argv[2] << '\n';
 
-
-
-    while (csound->PerformKsmps()==0)
-    {
-        if(ksmpsCount==ksmpsOffset){
-            csoundSetInstrumentBreakpoint(csound->GetCsound(), 1.1, 0);
-        }
-        ksmpsCount++;
-    }
+    csoundSetInstrumentBreakpoint(csound->GetCsound(), 1.1, ksmpsOffset);
+    csound->Perform();
 
     csoundDebuggerClean(csound->GetCsound());
     delete csound;
 }
 
-void brkpt_cb(CSOUND *csound, int line, double instr, void *userdata)
+void brkpt_cb(CSOUND *csound, debug_bkpt_info_t *bkpt_info, void *userdata)
 {
-    int *ksmpOffset = (int *) userdata;
-    cout << "\nBreakpoint at instr " << instr << "\nNumber of k-cycles into performance: " << *ksmpOffset << "\n------------------------------------------------------";;
-    *ksmpOffset = *ksmpOffset + 1;
+    cout << "\nBreakpoint at instr " << bkpt_info->breakpointInstr->p1
+         << "\nNumber of k-cycles into performance: "
+         << bkpt_info->breakpointInstr->kcounter
+         << "\n------------------------------------------------------";
 
-    INSDS *insds = csoundDebugGetInstrument(csound);
-    // Copy variable list
-    CS_VARIABLE *vp = insds->instr->varPool->head;
-    while (vp)
-    {
+//    debug_instr_t *debug_instr = bkpt_info.breakpointInstr;
+    debug_variable_t *vp = bkpt_info->instrVarList;
+    while (vp) {
         cout << " \n";
-        if (vp->varName[0] != '#')
+        if (vp->name[0] != '#')
         {
-            cout << "VarName:"<< vp->varName << "\t";;
-            if (strcmp(vp->varType->varTypeName, "i") == 0
-                || strcmp(vp->varType->varTypeName, "k") == 0)
-            {
-                if (vp->memBlock) {
-                    cout << "---" << *((MYFLT *)vp->memBlock);
-                } else
-                {
-                    MYFLT *varmem = insds->lclbas + vp->memBlockIndex;
-                    cout << "value = " << *varmem << "\t";;
-                }
-            }
-            else if(strcmp(vp->varType->varTypeName, "S") == 0)
-            {
-                STRINGDAT *varmem;
-                if (vp->memBlock) {
-                    varmem = (STRINGDAT *)vp->memBlock;
-                } else {
-                    varmem = (STRINGDAT *) (insds->lclbas + vp->memBlockIndex);
-                }
-                cout << "value = " << std::string(varmem->data) << "\t\t";;//, varmem->size));
-            }
-            else if (strcmp(vp->varType->varTypeName, "a") == 0)
-            {
-                if (vp->memBlock)
-                {
-                    cout << " =======" << *((MYFLT *)vp->memBlock) << *((MYFLT *)vp->memBlock + 1)
-                         << *((MYFLT *)vp->memBlock + 2)<< *((MYFLT *)vp->memBlock + 3);
-                }
-                else
-                {
-                    MYFLT *varmem = insds->lclbas + vp->memBlockIndex;
-                    cout << "value = "<< *varmem << "\t";
-                }
+            cout << "VarName:"<< vp->name << "\t";;
+            if (strcmp(vp->typeName, "i") == 0
+                    || strcmp(vp->typeName, "k") == 0) {
+                cout << "value = " << *((MYFLT *) vp->data) << "\t";;
+            } else if(strcmp(vp->typeName, "S") == 0) {
+                cout << "value = " << (char *) vp->data << "\t\t";
+            } else if (strcmp(vp->typeName, "a") == 0) {
+                MYFLT *data = (MYFLT *) vp->data;
+                cout << "value[0] = "<< data[0] << "\t";
             } else {
-
+                cout << "Unknown type\t";
             }
-            cout << " varType[" << vp->varType->varTypeName << "]";
+            cout << " varType[" << vp->typeName << "]";
         }
         vp = vp->next;
-    }
-
-    //Copy active instrument list
-    INSDS *in = insds;
-    while (in->prvact) {
-        in = in->prvact;
     }
 }

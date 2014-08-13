@@ -31,7 +31,7 @@ find_library(PORTSMF_LIBRARY portSMF)
 
 find_file(EIGEN_DENSE eigen3/Eigen/Dense)
 
-check_deps(BUILD_CSOUND_AC Boost_FOUND BUILD_CXX_INTERFACE FLTK_FOUND LIBSNDFILE_LIBRARY EIGEN_DENSE)
+check_deps(BUILD_CSOUND_AC Boost_INCLUDE_DIRS BUILD_CXX_INTERFACE FLTK_FOUND LIBSNDFILE_LIBRARY EIGEN_DENSE)
 check_deps(BUILD_CSOUND_AC_PYTHON_INTERFACE SWIG_FOUND PYTHONLIBS_FOUND EIGEN_DENSE)
 check_deps(BUILD_CSOUND_AC_LUA_INTERFACE SWIG_FOUND LUAJIT_LIBRARY LUA_H_PATH EIGEN_DENSE)
 
@@ -129,7 +129,7 @@ if(BUILD_CSOUND_AC)
 
 
   	    if(APPLE)
-            set_target_properties(${SWIG_MODULE_CsoundAC_REAL_NAME} PROPERTIES 
+            set_target_properties(${SWIG_MODULE_CsoundAC_REAL_NAME} PROPERTIES
                 LINK_FLAGS "-undefined dynamic_lookup")
        	endif()
 
@@ -165,7 +165,7 @@ if(BUILD_CSOUND_AC)
 
 
   	    if(APPLE)
-            set_target_properties(${SWIG_MODULE_luaCsoundAC_REAL_NAME} PROPERTIES 
+            set_target_properties(${SWIG_MODULE_luaCsoundAC_REAL_NAME} PROPERTIES
                 LINK_FLAGS "-undefined dynamic_lookup")
        	endif()
 

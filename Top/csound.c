@@ -72,6 +72,15 @@
 
 #include "csdebug.h"
 
+#ifdef MSVC
+// FIXME Had to comment this function out of other areas and only define it here for MSVC
+// Not exactly sure why but needs to be fixed
+char *csoundLocalizeString (const char *s)
+{
+    return (char*)s;
+}
+#endif
+
 static void SetInternalYieldCallback(CSOUND *, int (*yieldCallback)(CSOUND *));
 int  playopen_dummy(CSOUND *, const csRtAudioParams *parm);
 void rtplay_dummy(CSOUND *, const MYFLT *outBuf, int nbytes);
@@ -100,6 +109,8 @@ extern void close_all_files(CSOUND *);
 extern void csoundInputMessageInternal(CSOUND *csound, const char *message);
 
 void (*msgcallback_)(CSOUND *, int, const char *, va_list) = NULL;
+
+void csoundDebuggerBreakpointReached(CSOUND *csound);
 
 extern OENTRY opcodlst_1[];
 
@@ -798,7 +809,7 @@ static const CSOUND cenviron_ = {
       0, 0, 0, 0,   /*    RTevents, ...     */
       0, 0,         /*    ringbell, ...     */
       0, 0, 0,      /*    rewrt_hdr, ...    */
-      0,            /*    expr_opt          */
+//      0,            /*    expr_opt          */
       0.0f, 0.0f,   /*    sr_override ...  */
       0, 0,     /*    nchnls_override ... */
       (char*) NULL, (char*) NULL, NULL,
@@ -870,7 +881,8 @@ static const CSOUND cenviron_ = {
     0,              /* modules loaded */
     -1,             /* audio system sr */
     0,              /* csdebug_data */
-    kperf_nodebug  /* current kperf function - nodebug by default */
+    kperf_nodebug,  /* current kperf function - nodebug by default */
+    0               /* which score parser */
     /*, NULL */           /* self-reference */
 };
 
@@ -1478,19 +1490,19 @@ int kperf_nodebug(CSOUND *csound)
     }
 
     /* for one kcnt: */
-    if (csound->oparms_.sfread) /* if audio_infile open */
-      csound->spinrecv(csound); /* fill the spin buf */
-    csound->spoutactive = 0; /* make spout inactive */
+    if (csound->oparms_.sfread)         /*   if audio_infile open  */
+      csound->spinrecv(csound);         /*      fill the spin buf  */
+    csound->spoutactive = 0;            /*   make spout inactive   */
     /* clear spout */
     memset(csound->spout, 0, csound->nspout*sizeof(MYFLT));
     ip = csound->actanchor.nxtact;
 
     if (ip != NULL) {
       /* There are 2 partitions of work: 1st by inso,
-2nd by inso count / thread count. */
+         2nd by inso count / thread count. */
       if (csound->multiThreadedThreadInfo != NULL) {
         if (csound->dag_changed) dag_build(csound, ip);
-        else dag_reinit(csound); /* set to initial state */
+        else dag_reinit(csound);     /* set to initial state */
 
         /* process this partition */
         csound->WaitBarrier(csound->barrier1);
@@ -1505,15 +1517,15 @@ int kperf_nodebug(CSOUND *csound)
         int done;
         double time_end = (csound->ksmps+csound->icurTime)/csound->esr;
 
-        while (ip != NULL) { /* for each instr active: */
+        while (ip != NULL) {                /* for each instr active:  */
           INSDS *nxt = ip->nxtact;
           if (UNLIKELY(csound->oparms->sampleAccurate &&
-                       ip->offtim > 0 &&
+                       ip->offtim > 0                 &&
                        time_end > ip->offtim)) {
             /* this is the last cycle of performance */
-            // csound->Message(csound, "last cycle %d: %f %f %d\n",
-            // ip->insno, csound->icurTime/csound->esr,
-            // ip->offtim, ip->no_end);
+            //   csound->Message(csound, "last cycle %d: %f %f %d\n",
+            //       ip->insno, csound->icurTime/csound->esr,
+            //          ip->offtim, ip->no_end);
             ip->ksmps_no_end = ip->no_end;
           }
 #ifdef HAVE_ATOMIC_BUILTIN
@@ -1523,10 +1535,10 @@ int kperf_nodebug(CSOUND *csound)
 #endif
 
           if (done == 1) {/* if init-pass has been done */
-            OPDS *opstart = (OPDS*) ip;
+            OPDS  *opstart = (OPDS*) ip;
             ip->spin = csound->spin;
             ip->spout = csound->spout;
-            ip->kcounter = csound->kcounter;
+            ip->kcounter =  csound->kcounter;
             if(ip->ksmps == csound->ksmps) {
               while ((opstart = opstart->nxtp) != NULL) {
                 opstart->insdshead->pds = opstart;
@@ -1537,17 +1549,17 @@ int kperf_nodebug(CSOUND *csound)
               int i, n = csound->nspout, start = 0;
                 int lksmps = ip->ksmps;
                 int incr = csound->nchnls*lksmps;
-                int offset = ip->ksmps_offset;
+                int offset =  ip->ksmps_offset;
                 int early = ip->ksmps_no_end;
-                OPDS *opstart;
+                OPDS  *opstart;
                 ip->spin = csound->spin;
                 ip->spout = csound->spout;
-                ip->kcounter = csound->kcounter*csound->ksmps/lksmps;
+                ip->kcounter =  csound->kcounter*csound->ksmps/lksmps;
 
                 /* we have to deal with sample-accurate code
-whole CS_KSMPS blocks are offset here, the
-remainder is left to each opcode to deal with.
-*/
+                   whole CS_KSMPS blocks are offset here, the
+                   remainder is left to each opcode to deal with.
+                */
                 while(offset >= lksmps) {
                   offset -= lksmps;
                   start += csound->nchnls;
@@ -1589,8 +1601,7 @@ int kperf_debug(CSOUND *csound)
     csdebug_data_t *data = (csdebug_data_t *) csound->csdebug_data;
     debug_command_t command;
     command = CSDEBUG_CMD_NONE;
-    if (!data || data->status != CSDEBUG_STATUS_STOPPED)
-    {
+    if (!data || data->status != CSDEBUG_STATUS_STOPPED) {
       /* update orchestra time */
       csound->kcounter = ++(csound->global_kcounter);
       csound->icurTime += csound->ksmps;
@@ -1612,18 +1623,20 @@ int kperf_debug(CSOUND *csound)
       if (UNLIKELY(!csoundYield(csound))) csound->LongJmp(csound, 1);
     }
     if (data) {
-        csoundReadCircularBuffer(csound, data->cmd_buffer, &command, 1);
+      csoundReadCircularBuffer(csound, data->cmd_buffer, &command, 1);
     }
-    bkpt_node_t *bkpt_node;
     /* process new breakpoints */
     if (data) {
-      while (csoundReadCircularBuffer(csound, data->bkpt_buffer, &bkpt_node, 1) == 1) {
+      bkpt_node_t *bkpt_node;
+      while (csoundReadCircularBuffer(csound,
+                                      data->bkpt_buffer, &bkpt_node, 1) == 1) {
         if (bkpt_node->mode == CSDEBUG_BKPT_CLEAR_ALL) {
           bkpt_node_t *n;
           while (data->bkpt_anchor->next) {
             n = data->bkpt_anchor->next;
             data->bkpt_anchor->next = n->next;
-            free(n); /* FIXME this should be moved from kperf to a non-realtime context */
+            free(n); /* FIXME this should be moved from kperf to a
+                        non-realtime context */
           }
           free(bkpt_node);
         } else if (bkpt_node->mode == CSDEBUG_BKPT_DELETE) {
@@ -1632,7 +1645,8 @@ int kperf_debug(CSOUND *csound)
           while (n) {
             if (n->line == bkpt_node->line && n->instr == bkpt_node->instr) {
               prev->next = n->next;
-              free(n); /* FIXME this should be moved from kperf to a non-realtime context */
+              free(n); /* FIXME this should be moved from kperf to a
+                          non-realtime context */
               n = prev->next;
               continue;
             }
@@ -1646,7 +1660,7 @@ int kperf_debug(CSOUND *csound)
             data->bkpt_anchor->next = bkpt_node;
         }
       }
-      if (command == CSDEBUG_CMD_CONTINUE) {
+      if (command == CSDEBUG_CMD_CONTINUE && data->status == CSDEBUG_STATUS_STOPPED) {
         data->status = CSDEBUG_STATUS_CONTINUE;
       }
     }
@@ -1662,7 +1676,8 @@ int kperf_debug(CSOUND *csound)
     }
     ip = csound->actanchor.nxtact;
 
-    if (ip != NULL) { // FIXME debugger should also be able to stop even if no instruments are on
+    if (ip != NULL) { // FIXME debugger should also be able to stop
+                      // even if no instruments are on
       /* There are 2 partitions of work: 1st by inso,
          2nd by inso count / thread count. */
       if (csound->multiThreadedThreadInfo != NULL) {
@@ -1701,7 +1716,8 @@ int kperf_debug(CSOUND *csound)
           if (done == 1) {/* if init-pass has been done */
           if(data) {
             if(data->status == CSDEBUG_STATUS_CONTINUE) {
-              if (data->debug_instr_ptr) { /* if not NULL, resume from last active */
+              if (data->debug_instr_ptr) {
+                /* if not NULL, resume from last active */
                 ip = data->debug_instr_ptr;
                 data->debug_instr_ptr = NULL;
               } else {
@@ -1714,16 +1730,17 @@ int kperf_debug(CSOUND *csound)
             } else if (command == CSDEBUG_CMD_STOP) {
               data->debug_instr_ptr = ip;
               data->status = CSDEBUG_STATUS_STOPPED;
-              data->bkpt_cb(csound, 0, ip->p1, data->cb_data); /* treat stop as if breakpoint had been reached */
+              csoundDebuggerBreakpointReached(csound);
               return 0;
             } else { /* check if we have arrived at an instrument breakpoint */
               bkpt_node_t *bp_node = data->bkpt_anchor->next;
               while (bp_node) {
                 if (bp_node->instr == ip->p1) {
-                  if (bp_node->count < 2) { /* skip of 0 or 1 has the same effect */
+                  if (bp_node->count < 2) {
+                    /* skip of 0 or 1 has the same effect */
                     data->debug_instr_ptr = ip;
-                    data->bkpt_cb(csound, 0, ip->p1, data->cb_data);
                     data->status = CSDEBUG_STATUS_STOPPED;
+                    csoundDebuggerBreakpointReached(csound);
                     bp_node->count = bp_node->skip;
                     return 0;
                   } else {
@@ -1759,25 +1776,25 @@ int kperf_debug(CSOUND *csound)
                    whole CS_KSMPS blocks are offset here, the
                    remainder is left to each opcode to deal with.
                 */
-              while(offset >= lksmps) {
-                offset -= lksmps;
-                start += csound->nchnls;
-              }
-              ip->ksmps_offset = offset;
-              if(early){
-                n -= (early*csound->nchnls);
-                ip->ksmps_no_end = early % lksmps;
-              }
-
-              for (i=start; i < n; i+=incr, ip->spin+=incr, ip->spout+=incr) {
-                opstart = (OPDS*) ip;
-                while ((opstart = opstart->nxtp) != NULL && ip->actflg) {
-                  opstart->insdshead->pds = opstart;
-                  (*opstart->opadr)(csound, opstart); /* run each opcode */
-                  opstart = opstart->insdshead->pds;
+                while(offset >= lksmps) {
+                  offset -= lksmps;
+                  start += csound->nchnls;
                 }
-                ip->kcounter++;
-              }
+                ip->ksmps_offset = offset;
+                if(early){
+                  n -= (early*csound->nchnls);
+                  ip->ksmps_no_end = early % lksmps;
+                  }
+
+               for (i=start; i < n; i+=incr, ip->spin+=incr, ip->spout+=incr) {
+                  opstart = (OPDS*) ip;
+                  while ((opstart = opstart->nxtp) != NULL && ip->actflg) {
+                    opstart->insdshead->pds = opstart;
+                    (*opstart->opadr)(csound, opstart); /* run each opcode */
+                    opstart = opstart->insdshead->pds;
+                  }
+                  ip->kcounter++;
+                }
             }
           }
           ip->ksmps_offset = 0; /* reset sample-accuracy offset */
@@ -1789,10 +1806,10 @@ int kperf_debug(CSOUND *csound)
 
     if (!data || data->status != CSDEBUG_STATUS_STOPPED)
     {
-      if (!csound->spoutactive) {             /*   results now in spout? */
-        memset(csound->spout, 0, csound->nspout * sizeof(MYFLT));
-      }
-      csound->spoutran(csound);               /*      send to audio_out  */
+    if (!csound->spoutactive) {             /*   results now in spout? */
+      memset(csound->spout, 0, csound->nspout * sizeof(MYFLT));
+    }
+    csound->spoutran(csound);               /*      send to audio_out  */
     }
     return 0;
 }
@@ -2134,7 +2151,7 @@ extern void midifile_rewind_score(CSOUND *csound);    /* midifile.c */
 PUBLIC void csoundRewindScore(CSOUND *csound)
 {
     musmon_rewind_score(csound);
-    midifile_rewind_score(csound);
+    if(csound->oparms->FMidiname != NULL) midifile_rewind_score(csound);
 }
 
 PUBLIC void csoundSetCscoreCallback(CSOUND *p,
@@ -2769,7 +2786,8 @@ static CS_NOINLINE int opcode_list_new_oentry(CSOUND *csound,
 
 PUBLIC int csoundAppendOpcode(CSOUND *csound,
                               const char *opname, int dsblksiz, int flags,
-                              int thread, const char *outypes, const char *intypes,
+                              int thread, const char *outypes,
+                                          const char *intypes,
                               int (*iopadr)(CSOUND *, void *),
                               int (*kopadr)(CSOUND *, void *),
                               int (*aopadr)(CSOUND *, void *))
@@ -3154,8 +3172,8 @@ PUBLIC void csoundReset(CSOUND *csound)
     csoundCreateConfigurationVariable(csound, "mute_tracks",
                                       &(csound->midiGlobals->muteTrackList[0]),
                                       CSOUNDCFG_STRING, 0, NULL, &max_len,
-                                      Str("Ignore events (other than tempo changes)"
-                                          " in tracks defined by pattern"),
+                                      Str("Ignore events (other than tempo "
+                                          "changes) in tracks defined by pattern"),
                                       NULL);
     csoundCreateConfigurationVariable(csound, "raw_controller_mode",
                                       &(csound->midiGlobals->rawControllerMode),
@@ -3847,6 +3865,8 @@ double csoundGetOffTime(void *p)
  */
 MYFLT *csoundGetPFields(void *p)
 {
+    
+    /* FIXME - this is no longer valid, should return CS_VAR_MEM* and use ->p0_type */
     return (MYFLT*) &(((OPDS*) p)->insdshead->p0);
 }
 

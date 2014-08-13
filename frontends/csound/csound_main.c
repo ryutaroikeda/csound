@@ -69,6 +69,10 @@ static void msg_callback(CSOUND *csound,
 static void nomsg_callback(CSOUND *csound,
   int attr, const char *format, va_list args){ return; }
 
+#ifdef MSVC
+# define isatty _isatty
+#endif
+
 int main(int argc, char **argv)
 {
     CSOUND  *csound;
@@ -78,12 +82,8 @@ int main(int argc, char **argv)
     const char* lang;
 #endif
 
-#ifdef MSVC
-	if (!_isatty(fileno(stdout))) {
-#else
     /* set stdout to non buffering if not outputing to console window */
     if (!isatty(fileno(stdout))) {
-#endif
 #if !defined(WIN32)
       setvbuf(stdout, (char*) NULL, _IONBF, 0);
 #endif

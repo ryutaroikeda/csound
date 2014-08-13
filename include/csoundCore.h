@@ -197,7 +197,7 @@ typedef struct {
     int     RTevents, Midiin, FMidiin, RMidiin;
     int     ringbell, termifend;
     int     rewrt_hdr, heartbeat, gen01defer;
-    int     expr_opt;       /* IV - Jan 27 2005: for --expression-opt */
+    //    int     expr_opt;       /* IV - Jan 27 2005: for --expression-opt */
     float   sr_override, kr_override;
     int     nchnls_override, nchnls_i_override;
     char    *infilename, *outfilename;
@@ -523,10 +523,14 @@ typedef struct {
     MYFLT  *lclbas;  /* base for variable memory pool */
     char   *strarg;       /* string argument */
     /* Copy of required p-field values for quick access */
-    MYFLT   p0;
-    MYFLT   p1;
-    MYFLT   p2;
-    MYFLT   p3;
+    CS_TYPE*    p0_type;
+    MYFLT       p0;
+    CS_TYPE*    p1_type;
+    MYFLT       p1;
+    CS_TYPE*    p2_type;
+    MYFLT       p2;
+    CS_TYPE*    p3_type;
+    MYFLT       p3;
   } INSDS;
 
 #define CS_KSMPS     (p->h.insdshead->ksmps)
@@ -625,6 +629,10 @@ typedef struct {
     int32    nchanls;
     /** table number */
     int32    fno;
+    /** args  */
+    MYFLT args[PMAX - 4];
+    /** arg count */
+    int argcnt;
     /** GEN01 parameters */
     GEN01ARGS gen01args;
     /** table data (flen + 1 MYFLT values) */
@@ -1678,6 +1686,7 @@ typedef struct NAME__ {
     MYFLT         _system_sr;
     void*         csdebug_data; /* debugger data */
     int (*kperf)(CSOUND *); /* kperf function pointer, to switch between debug and nodebug function */
+    int           score_parser;
     /*struct CSOUND_ **self;*/
     /**@}*/
 #endif  /* __BUILDING_LIBCSOUND */

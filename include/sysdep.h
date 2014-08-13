@@ -83,6 +83,9 @@ typedef void *locale_t;
 
 #if defined(_MSC_VER)
 # define MSVC
+
+// For MSVC, there is only _snprintf
+#define snprintf _snprintf
 #endif 
 
 #ifndef CABBAGE
@@ -187,6 +190,9 @@ typedef uint_least16_t uint16;
 #    define MYFLT double
 #  endif
 #endif
+
+/* Aligning to double boundaries, should work with MYFLT as float or double */
+#define CS_FLOAT_ALIGN(x) ((int)(x + 7) & (~7))
 
 #if defined(__BUILDING_LIBCSOUND) || defined(CSOUND_CSDL_H)
 
@@ -421,7 +427,7 @@ static inline double csoundUndenormalizeDouble(double x)
 # define CS_SSCANF cs_sscanf
 /* #endif */
 
-#ifndef HAVE_STRLCAT
+#if !defined(HAVE_STRLCAT) && !defined(strlcat)
 size_t strlcat(char *dst, const char *src, size_t siz);
 #endif
 

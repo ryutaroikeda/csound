@@ -564,9 +564,10 @@ static int dnoise(CSOUND *csound, int argc, char **argv)
     if ((L%2) == 0)
       Leven = 1;
 
-    if (M < 7)
+    if (M < 7) {
       csound->Message(csound, Str("dnoise: warning - M is too small\n"));
-
+      exit(~1);
+    }
     if (D == 0)
       D = M / 8;
 
@@ -1148,7 +1149,7 @@ static const char *usage_txt[] = {
   Str_noop("i = noise reference soundfile"),
   Str_noop("o = output file"),
   Str_noop("N = # of bandpass filters (1024)"),
-  Str_noop("w = filter overlap factor: {0,1,(2),3} DON'T USE -w AND -M"),
+  Str_noop("w = filter overlap factor: {0,1,(2),3} DO NOT USE -w AND -M"),
   Str_noop("M = analysis window length (N-1 unless -w is specified)"),
   Str_noop("L = synthesis window length (M)"),
   Str_noop("D = decimation factor (M/8)"),

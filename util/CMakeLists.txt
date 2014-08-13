@@ -6,7 +6,6 @@ set(stdutil_SRCS
     lpc_export.c    lpc_import.c    mixer.c     pvanal.c        
     pv_export.c     pv_import.c     pvlook.c    scale.c
     sndinfo.c       srconv.c        std_util.c  xtrct.c
-    scope.c
     ../SDIF/sdif.c)
 
 if(MSVC)
@@ -45,5 +44,4 @@ if(BUILD_UTILITIES)
     make_utility(scale       scale_main.c)
     make_utility(sndinfo     sndinfo_main.c)
     make_utility(srconv      srconv_main.c)
-    make_utility(scope       scope_main.c)          
 endif()

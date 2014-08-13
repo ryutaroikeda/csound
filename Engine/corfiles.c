@@ -40,15 +40,15 @@ CORFIL *corfile_create_w(void)
     return ans;
 }
 
+#ifdef MSVC
+# define strdup _strdup
+#endif
+
 CORFIL *corfile_create_r(const char *text)
 {
     //char *strdup(const char *);
     CORFIL *ans = (CORFIL*)malloc(sizeof(CORFIL));
-#ifdef MSVC
-	ans->body = _strdup(text);
-#else
     ans->body = strdup(text);
-#endif
     ans->len = strlen(text)+1;
     ans->p = 0;
     return ans;

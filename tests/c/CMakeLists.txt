@@ -21,11 +21,6 @@ include_directories(${CUNIT_H})
 
 ENABLE_TESTING()
 
-add_executable(testCompilation compilation_test.c)
-target_link_libraries(testCompilation ${CSOUNDLIB_STATIC} ${CUNIT_LIBRARY})
-add_test(NAME testCompilation
-		COMMAND $<TARGET_FILE:testCompilation> ${TEST_ARGS})
-
 add_executable(testCsoundTypeSystem csound_type_system_test.c)
 target_link_libraries(testCsoundTypeSystem ${CSOUNDLIB_STATIC} ${CUNIT_LIBRARY})
 set(testCsoundTypeSystem -D__BUILDING_LIBCSOUND)
@@ -82,13 +77,11 @@ add_test(NAME testPerfThread
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/c/
 		COMMAND $<TARGET_FILE:testPerfThread> ${CMAKE_SOURCE_DIR}/tests/c/ -arg2 ${TEST_ARGS})
 
-if(BUILD_DEBUGGER)
 add_executable(testDebugger csound_debugger_test.c)
-target_link_libraries(testDebugger ${CSOUNDLIB} ${CUNIT_LIBRARY} pthread libcsnd6)
+target_link_libraries(testDebugger ${CSOUNDLIB} ${CUNIT_LIBRARY} ${PTHREAD_LIB} libcsnd6)
 add_test(NAME testDebugger
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/c/
         COMMAND $<TARGET_FILE:testDebugger> ${CMAKE_SOURCE_DIR}/tests/c/ -arg2 ${TEST_ARGS})
-endif(BUILD_DEBUGGER)
 
 endif(BUILD_TESTS)
 

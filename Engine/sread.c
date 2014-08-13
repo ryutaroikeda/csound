@@ -35,32 +35,6 @@
 //#define MARGS   (3)
 //#define MACDEBUG (1)
 
-/* typedef struct S_MACRO {          /\* To store active macros *\/ */
-/*     char        *name;          /\* Use is by name *\/ */
-/*     int         acnt;           /\* Count of arguments *\/ */
-/*     CORFIL      *body;          /\* The text of the macro *\/ */
-/*     struct S_MACRO *next;         /\* Chain of active macros *\/ */
-/*     int         margs;          /\* ammount of space for args *\/ */
-/*     char        *arg[MARGS];    /\* With these arguments *\/ */
-/* } S_MACRO; */
-
-/* typedef struct in_stack_s {     /\* Stack of active inputs *\/ */
-/*     int16       is_marked_repeat;/\* 1 if this input created by 'n' stmnt *\/ */
-/*     int16       args;                 /\* Argument count for macro *\/ */
-/*     CORFIL      *cf;                  /\* In core file *\/ */
-/*     void        *fd;                  /\* for closing stream *\/ */
-/*     S_MACRO       *mac; */
-/*     int         line; */
-/* } IN_STACK; */
-
-/* typedef struct marked_sections { */
-/*     char        *name; */
-/*     int32       posit; */
-/*     int         line; */
-/*     char        *file; */
-/* } MARKED_SECTIONS; */
-
-
 static void print_input_backtrace(CSOUND *csound, int needLFs,
                                   void (*msgfunc)(CSOUND*, const char*, ...));
 static  void    copylin(CSOUND *), copypflds(CSOUND *);
@@ -807,34 +781,36 @@ int sread(CSOUND *csound)       /*  called from main,  reads from SCOREIN   */
     csound->sectcnt++;
     rtncod = 0;
     salcinit(csound);           /* init the mem space for this section  */
+#ifdef SCORE_PARSER
+    if (csound->score_parser) {
+      extern int scope(CSOUND*);
+      printf("**********************************************************\n");
+      printf("*******************EXPERIMENTAL CODE**********************\n");
+      printf("**********************************************************\n");
+      scope(csound);
+      exit(0);
+    }
+#endif
 
     while ((STA(op) = getop(csound)) != EOF) { /* read next op from scorefile */
       rtncod = 1;
       salcblk(csound);          /* build a line structure; init bp,nxp  */
     again:
       switch (STA(op)) {         /*  and dispatch on opcodes             */
-      case 'i':
-      case 'f':
-      case 'a':
-      case 'q':
-        ifa(csound);
-        break;
-      case 'w':
-        STA(warpin)++;
-        copypflds(csound);
-        break;
       case 'y':
-        ifa(csound);
-        //printf("set seed in score\n");
         {
           char  *p = &(STA(bp)->text[1]);
           char q;
-          char *old_nxp = STA(nxp)-2;
-          while (isblank(*p)) p++;
+          //char *old_nxp = STA(nxp)-2;
+          //printf("text=%s<<\n", STA(bp)->text);
           /* Measurement shows isdigit and 3 cases is about 30% */
           /* faster than use of strchr (measured on Suse9.3)    */
           /*         if (strchr("+-.0123456789", *p) != NULL) { */
-          q = *p;
+          while ((q=getscochar(csound,1))!='\n') *p++ = q;
+          *p = '\0';
+          //printf("text=%s<<\n", STA(bp)->text);
+          p = &(STA(bp)->text[1]);
+          while (isblank(q=*p)) p++;
           if (isdigit(q) || q=='+' || q=='-' || q=='.') {
             double  tt;
             char    *tmp = p;
@@ -850,14 +826,22 @@ int sread(CSOUND *csound)       /*  called from main,  reads from SCOREIN   */
             csound->randSeed1 = tmp+1;
             printf("seed from clock %d\n", csound->randSeed1);
           }
-          flushlin(csound);
-          // Really we need to remove this line totally but this did not work
-          STA(op) = getop(csound);
-          STA(nxp) = old_nxp;
-          *STA(nxp)++ = STA(op); /* Undo this line */
-          STA(nxp)++;
+          //printf("cleaning up\n");
+          break;
+          //q = STA(op) = getop(csound);
+          //printf("next op = %c(%.2x)\n", q, q);
+          //goto again;
         }
-        goto again;
+      case 'i':
+      case 'f':
+      case 'a':
+      case 'q':
+        ifa(csound);
+        break;
+      case 'w':
+        STA(warpin)++;
+        copypflds(csound);
+        break;
       case 't':
         copypflds(csound);
         break;
@@ -1198,7 +1182,9 @@ int sread(CSOUND *csound)       /*  called from main,  reads from SCOREIN   */
       case -1:
         break;
       default:
-        csound->Message(csound,Str("sread is confused on legal opcodes\n"));
+        csound->Message(csound,
+                        Str("sread is confused on legal opcodes %c(%.2x)\n"),
+                        STA(op), STA(op));
         break;
       }
     }
@@ -1748,6 +1734,18 @@ static int sget1(CSOUND *csound)    /* get first non-white, non-comment char */
         while (c != '\n' && c != EOF)
           c = getscochar(csound, 1); /* ignore rest of line */
       }
+#ifdef SCORE_PARSER
+      else if (c=='e') {
+        if (UNLIKELY(!check_preproc_name(csound, "exit"))) {
+          csound->Message(csound, "Not #exit");
+          flushlin(csound);
+          free(mname);
+          goto srch;
+        }
+        while (c != '\n' && c != EOF)
+          c = getscochar(csound, 1); /* ignore rest of line */
+      }
+#endif
       else {
         sreaderr(csound, Str("unknown # option"));
         flushlin(csound);

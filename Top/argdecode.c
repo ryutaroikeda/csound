@@ -740,12 +740,15 @@ static int decode_long(CSOUND *csound, char *s, int argc, char **argv)
       return 1;
     }
     /* IV - Jan 27 2005: --expression-opt */
+    /* NOTE these do nothing */
     else if (!(strcmp (s, "expression-opt"))) {
-      O->expr_opt = 1;
+      //O->expr_opt = 1;
+      csound->Warning(csound, Str("option expresson-opt has no affect\n"));
       return 1;
     }
     else if (!(strcmp (s, "no-expression-opt"))) {
-      O->expr_opt = 0;
+      //O->expr_opt = 0;
+      csound->Warning(csound, Str("option no-expresson-opt has no affect\n"));
       return 1;
     }
     else if (!(strncmp (s, "env:", 4))) {
@@ -930,28 +933,32 @@ static int decode_long(CSOUND *csound, char *s, int argc, char **argv)
     }
     else if (!(strcmp(s, "new-parser")) ||
              !(strcmp(s, "old-parser"))) {
-        return 1;  /* ignore flag, this is here for backwards compatibility */
+      return 1;  /* ignore flag, this is here for backwards compatibility */
+    }
+    else if (!(strcmp(s, "sco-parser"))) {
+      csound->score_parser = 1;
+      return 1;  /* Try new parser */
     }
     else if (!(strcmp(s, "daemon"))) {
-        O->daemon = 1;
-        return 1;
+      O->daemon = 1;
+      return 1;
     }
     else if (!(strncmp(s, "port=",5))) {
-        s += 5;
-        O->daemon = atoi(s);
-        return 1;
+      s += 5;
+      O->daemon = atoi(s);
+      return 1;
     }
     else if (!(strncmp(s, "vbr-quality=",12))) {
-        s += 12;
-        O->quality = atof(s);
-        return 1;
+      s += 12;
+      O->quality = atof(s);
+      return 1;
       }
     else if (!(strncmp(s, "devices",7))) {
       csoundLoadExternals(csound);
       if (csoundInitModules(csound) != 0)
-              csound->LongJmp(csound, 1);
-      if(*(s+7) == '='){
-        if(!strncmp(s+8,"in", 2)) {
+        csound->LongJmp(csound, 1);
+      if (*(s+7) == '='){
+        if (!strncmp(s+8,"in", 2)) {
           list_audio_devices(csound, 0);
         }
         else if(!strncmp(s+8,"out", 2))
@@ -965,19 +972,19 @@ static int decode_long(CSOUND *csound, char *s, int argc, char **argv)
       return 1;
       }
     else if (!(strncmp(s, "get-system-sr",13))){
-      if(O->outfilename && 
-        !(strncmp(O->outfilename, "dac",3))) {
-      /* these are default values to get the
-         backend to open successfully */
-      set_output_format(O, 'f');
-      O->inbufsamps = O->outbufsamps = 256;
-      O->oMaxLag = 1024;
-      csoundLoadExternals(csound);
-      if (csoundInitModules(csound) != 0)
-              csound->LongJmp(csound, 1);
-      sfopenout(csound);
-      csound->Message(csound, "system sr: %f\n", csound->system_sr(csound,0));
-      sfcloseout(csound);
+      if (O->outfilename &&
+          !(strncmp(O->outfilename, "dac",3))) {
+        /* these are default values to get the
+           backend to open successfully */
+        set_output_format(O, 'f');
+        O->inbufsamps = O->outbufsamps = 256;
+        O->oMaxLag = 1024;
+        csoundLoadExternals(csound);
+        if (csoundInitModules(csound) != 0)
+          csound->LongJmp(csound, 1);
+        sfopenout(csound);
+        csound->Message(csound, "system sr: %f\n", csound->system_sr(csound,0));
+        sfcloseout(csound);
       }
       csound->info_message_request = 1;
       return 1;
@@ -1021,7 +1028,7 @@ PUBLIC int argdecode(CSOUND *csound, int argc, char **argv_)
             FIND(Str("no utility name"));
             {
               int retval = csoundRunUtility(csound, s, argc, argv);
-              if(retval) {
+              if (retval) {
                   csound->info_message_request = 1;
                   csound->orchname = NULL;
                   goto end;
@@ -1460,7 +1467,7 @@ PUBLIC void csoundSetOutput(CSOUND *csound, char *name, char *type, char *format
     if (type != NULL) {
       int i=0;
       while ((typename = file_type_map[i].format) != NULL) {
-        if(!strcmp(type,typename)) break;
+        if (!strcmp(type,typename)) break;
         i++;
       }
       if (typename != NULL) {

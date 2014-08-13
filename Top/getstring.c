@@ -45,6 +45,10 @@ int closedir(DIR*);
 
 #define CSSTRNGS_VERSION 0x2000
 #include <locale.h>
+#ifdef GNU_GETTEXT
+#include <libintl.h>
+#endif
+
 #ifndef GNU_GETTEXT
 void init_getstring(void *cs)
 {
@@ -58,10 +62,14 @@ void init_getstring(void *cs)
 #endif
 }
 
+#ifndef MSVC
+//FIXME if left uncommented, there are linking errors saying it is already defined
 PUBLIC char *csoundLocalizeString(const char *s)
 {
     return (char*)s;
 }
+#endif
+
 /* This stub is needed for backwards compatibility */
 PUBLIC void csoundSetLanguage(cslanguage_t lang_code)
 {
@@ -77,9 +85,8 @@ void init_getstring(void *cs)
 /*       setlocale (LC_MESSAGES, s);    /\* Set to particular value *\/ */
 /*    textdomain("csound6"); */  /* This is not needed when using dgettext */
     /* bind_textdomain_codeset("csound6", "UTF-8"); */
-#ifdef never
-    /* This is experimental; where should these be?? */
-    bindtextdomain("csound6", "/home/jpff/Sourceforge/csound/csound6/po");
+#if defined(CSOUND_TEXTDOMAIN)
+    bindtextdomain("csound6", CSOUND_TEXTDOMAIN);
 #endif
 #ifndef HAVE_STRTOD_L
     setlocale(LC_NUMERIC, "C"); /* Ensure C syntax */
