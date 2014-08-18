@@ -2,7 +2,7 @@
  
  LevelMeterView.m:
  
- Copyright (C) 2011 Thomas Hass
+ Copyright (C) 2014 Thomas Hass, Aurelius Prochazka
  
  This file is part of Csound iOS Examples.
  
@@ -25,16 +25,23 @@
 
 #import "LevelMeterView.h"
 
-@implementation LevelMeterView
+@interface LevelMeterView () {
+	float channelValue;
+    float *channelPtr;
+	CGFloat lastY;
+	NSInteger ksmps, sr;
+}
+@property (nonatomic, strong) NSString *channelName;
 
-@synthesize channelName = mChannelName;
-@synthesize cacheDirty = mCacheDirty;
+@end
+
+@implementation LevelMeterView
 
 - (id)initWithFrame:(CGRect)frame
 {
 	self = [super initWithFrame:frame];
 	if (self) {
-		cachedValue = 0.0f;
+		channelValue = 0.0f;
 	}
 	return self;
 }
@@ -43,7 +50,7 @@
 {
 	self = [super initWithCoder:aDecoder];
 	if (self) {
-		cachedValue = 0.0f;
+		channelValue = 0.0f;
 		lastY = -100;
 	}
 	return self;
@@ -51,7 +58,7 @@
 
 - (void)addToCsoundObj:(CsoundObj *)csoundObj forChannelName:(NSString *)channelName_
 {
-	[csoundObj addValueCacheable:self];
+	[csoundObj addDataBinding:self];
 	self.channelName = channelName_;
 }
 
@@ -108,7 +115,7 @@
 	CGContextFillPath(context);
 	
 	// Draw the rest of the rects.
-	for (int y = 12.0f; y < height * cachedValue - 12.0f; y += squareHeight + 5.0f) {
+	for (int y = 12.0f; y < height * channelValue - 12.0f; y += squareHeight + 5.0f) {
 		if (y < (height * 0.7f)) {
 			CGContextSetFillColorWithColor(context, greenColor);
 		} else if ((y < height * 0.9f)) {
@@ -138,7 +145,7 @@
 	count++;
 }
 
-#pragma mark - ValueCachable
+#pragma mark - Csound Data Binding
 
 -(void)setup:(CsoundObj*)csoundObj
 {
@@ -148,14 +155,9 @@
 	ksmps = csoundGetKsmps(cs);
 }
 
--(void)updateValuesToCsound
-{
-	//...
-}
-
 -(void)updateValuesFromCsound
 {
-	cachedValue = fabs(*channelPtr);
+	channelValue = fabs(*channelPtr);
 	
 	static NSInteger count = 0;
 	if (count % ((sr/ksmps)/20) == 0) {
@@ -169,7 +171,7 @@
 
 - (void)cleanup
 {
-	cachedValue = 0;
+	channelValue = 0;
 	lastY = -100;
 	[self setNeedsDisplay];
 }

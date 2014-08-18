@@ -26,21 +26,10 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 #import "CsoundObj.h"
-#import "CsoundValueCacheable.h"
 
-@interface LevelMeterView : UIView <CsoundValueCacheable>
-{
-	BOOL mCacheDirty;
-	float cachedValue;
-    float* channelPtr;
-    NSString* mChannelName;
-	CGFloat lastY;
-	NSInteger ksmps, sr;
-}
+@interface LevelMeterView : UIView <CsoundDataBinding>
 
-@property (assign) BOOL cacheDirty;
-@property (nonatomic, strong) NSString *channelName;
-
-- (void)addToCsoundObj:(CsoundObj *)csoundObj forChannelName:(NSString *)channelName;
+- (void)addToCsoundObj:(CsoundObj *)csoundObj
+        forChannelName:(NSString *)channelName;
 
 @end

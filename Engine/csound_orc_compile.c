@@ -55,6 +55,8 @@ int named_instr_alloc(CSOUND *csound, char *s, INSTRTXT *ip, int32 insno,
                       ENGINE_STATE *engineState);
 int check_instr_name(char *s);
 
+extern const char* SYNTHESIZED_ARG;
+
 #ifdef FLOAT_COMPARE
 #undef FLOAT_COMPARE
 #endif
@@ -87,6 +89,7 @@ int pnum(char *s)        /* check a char string for pnum format  */
     return(-1);
 }
 
+#if 0
 static int argCount(ARG* arg)
 {
     int retVal = -1;
@@ -99,6 +102,7 @@ static int argCount(ARG* arg)
     }
     return retVal;
 }
+#endif
 
 /* get size of string in MYFLT units */
 static inline int strlen_to_samples(const char *s)
@@ -254,81 +258,6 @@ char** splitArgs(CSOUND* csound, char* argString)
     return args;
 }
 
-void set_xincod(CSOUND *csound, TEXT *tp, OENTRY *ep)
-{
-    int n = tp->inlist->count;
-    char *s;
-    int nreqd = argsRequired(ep->intypes);
-
-    if(nreqd == -1) /* argsRequired failed */
-      return;
-
-    char **types = splitArgs(csound, ep->intypes);
-    //int lgprevdef = 0;
-    char      tfound = '\0', treqd;
-
-    if (n > nreqd) {
-      if ((treqd = *types[nreqd-1]) == 'n') {  /* indef args: */
-        int incnt = -1;                       /* Should count args */
-        if (!(incnt & 01))                    /* require odd */
-          synterr(csound, Str("missing or extra arg"));
-      }       /* IV - Sep 1 2002: added 'M' */
-      else if (treqd != 'm' && treqd != 'z' && treqd != 'y' &&
-               treqd != 'Z' && treqd != 'M' && treqd != 'N' &&
-               treqd != '*' && treqd != 'I' && treqd != 'W') /* else any no */
-        synterr(csound, Str("too many input args\n"));
-    }
-
-    while (n--) {                     /* inargs:   */
-      s = tp->inlist->arg[n];
-
-      if (n >= nreqd) {               /* det type required */
-        switch (*types[nreqd-1]) {
-        case 'M':
-        case 'W':
-        case 'N':
-        case 'Z':
-        case 'y':
-        case 'I':
-        case 'z':   treqd = *types[nreqd-1]; break;
-        default:    treqd = 'i';    /*   (indef in-type) */
-        }
-      }
-      else treqd = *types[n];          /*       or given)   */
-      if (treqd == 'l') {             /* if arg takes lbl  */
-        csound->DebugMsg(csound, "treqd = l");
-        //        lblrequest(csound, s);        /*      req a search */
-        continue;                     /*      chk it later */
-      }
-      tfound = argtyp2(s);     /* else get arg type */
-      if (tfound == 'a' && n < 31) /* JMC added for FOG */
-                                   /* 4 for FOF, 8 for FOG; expanded to 15  */
-        tp->xincod |= (1 << n);
-      if (tfound == 'S' && n < 31)
-        tp->xincod_str |= (1 << n);
-    }
-    csound->Free(csound, types);
-}
-
-
-void set_xoutcod(CSOUND *csound, TEXT *tp, OENTRY *ep)
-{
-    int n = tp->outlist->count;
-    char *s;
-    char **types = splitArgs(csound, ep->outypes);
-    char      tfound = '\0';
-
-    while (n--) {                                     /* outargs:  */
-      s = tp->outlist->arg[n];
-      tfound = argtyp2(s);                     /*  found    */
-      if (tfound == 'a' && n < 31)
-        tp->xoutcod |= (1 << n);
-      if (tfound == 'S' && n < 31)
-        tp->xoutcod_str |= (1 << n);
-    }
-    csound->Free(csound, types);
-}
-
 
 OENTRY* find_opcode(CSOUND*, char*);
 /**
@@ -381,6 +310,7 @@ OPTXT *create_opcode(CSOUND *csound, TREE *root, INSTRTXT *ip,
       /* INITIAL SETUP */
       tp->oentry = (OENTRY*)root->markup;
       tp->opcod = strsav_string(csound, engineState, tp->oentry->opname);
+      tp->linenum = root->line;
       ip->mdepends |= tp->oentry->flags;
       ip->opdstot += tp->oentry->dsblksiz;
 
@@ -398,6 +328,7 @@ OPTXT *create_opcode(CSOUND *csound, TREE *root, INSTRTXT *ip,
         tp->outlist = (ARGLST*) csound->ReAlloc(csound, tp->outlist, m);
         tp->outlist->count = outcount;
 
+        tp->inArgCount = 0;
 
         for (inargs = root->right; inargs != NULL; inargs = inargs->next) {
           /* INARGS */
@@ -412,6 +343,9 @@ OPTXT *create_opcode(CSOUND *csound, TREE *root, INSTRTXT *ip,
           else {
             lgbuild(csound, ip, arg, 1, engineState);
           }
+          if (inargs->markup != &SYNTHESIZED_ARG) {
+            tp->inArgCount++;
+          }
         }
       }
       /* VERIFY ARG LISTS MATCH OPCODE EXPECTED TYPES */
@@ -423,7 +357,8 @@ OPTXT *create_opcode(CSOUND *csound, TREE *root, INSTRTXT *ip,
           arg = outargs->value->lexeme;
           tp->outlist->arg[argcount++] = strsav_string(csound, engineState, arg);
         }
-        set_xincod(csound, tp, ep);
+        
+        tp->outArgCount = 0;
 
         /* OUTARGS */
         for (outargs = root->left; outargs != NULL; outargs = outargs->next) {
@@ -437,9 +372,8 @@ OPTXT *create_opcode(CSOUND *csound, TREE *root, INSTRTXT *ip,
             csound->DebugMsg(csound, "Arg: %s\n", arg);
             lgbuild(csound, ip, arg, 0, engineState);
           }
-
+          tp->outArgCount++;
         }
-        set_xoutcod(csound, tp, ep);
 
         if (root->right != NULL) {
           if (ep->intypes[0] != 'l') {     /* intype defined by 1st inarg */
@@ -489,7 +423,7 @@ void addGlobalVariable(CSOUND *csound,
     varMem->varType = var->varType;
     var->memBlock = varMem;
     if (var->initializeVariableMemory != NULL) {
-      var->initializeVariableMemory(var, &varMem->memBlock);
+      var->initializeVariableMemory(var, &varMem->value);
     }
 }
 
@@ -1262,9 +1196,9 @@ int engineState_merge(CSOUND *csound, ENGINE_STATE *engineState)
     for (count = 0; count < engineState->constantsPool->count; count++) {
       if (csound->oparms->odebug)
         csound->Message(csound, Str(" merging constants %d) %f\n"),
-                        count, engineState->constantsPool->values[count].memBlock);
+                        count, engineState->constantsPool->values[count].value);
       myflt_pool_find_or_add(csound, current_state->constantsPool,
-                             engineState->constantsPool->values[count].memBlock);
+                             engineState->constantsPool->values[count].value);
     }
     CS_VARIABLE* gVar = engineState->varPool->head;
     while (gVar != NULL) {
@@ -1433,8 +1367,8 @@ PUBLIC int csoundCompileTree(CSOUND *csound, TREE *root)
       varMem->varType = var->varType;
       var->memBlock = varMem;
       if (var->initializeVariableMemory != NULL) {
-        var->initializeVariableMemory(var, &varMem->memBlock);
-      } else  memset(&varMem->memBlock , 0, var->memBlockSize);
+        var->initializeVariableMemory(var, &varMem->value);
+      } else  memset(&varMem->value , 0, var->memBlockSize);
       var = var->next;
     }
 
@@ -1634,18 +1568,18 @@ PUBLIC int csoundCompileTree(CSOUND *csound, TREE *root)
 
       CS_VARIABLE *var;
       var = csoundFindVariableWithName(csound, engineState->varPool, "sr");
-      var->memBlock->memBlock = csound->esr;
+      var->memBlock->value = csound->esr;
       var = csoundFindVariableWithName(csound, engineState->varPool, "kr");
-      var->memBlock->memBlock = csound->ekr;
+      var->memBlock->value = csound->ekr;
       var = csoundFindVariableWithName(csound, engineState->varPool, "ksmps");
-      var->memBlock->memBlock = csound->ksmps;
+      var->memBlock->value = csound->ksmps;
       var = csoundFindVariableWithName(csound, engineState->varPool, "nchnls");
-      var->memBlock->memBlock = csound->nchnls;
+      var->memBlock->value = csound->nchnls;
       if (csound->inchnls<0) csound->inchnls = csound->nchnls;
       var = csoundFindVariableWithName(csound, engineState->varPool, "nchnls_i");
-      var->memBlock->memBlock = csound->inchnls;
+      var->memBlock->value = csound->inchnls;
       var = csoundFindVariableWithName(csound, engineState->varPool, "0dbfs");
-      var->memBlock->memBlock = csound->e0dbfs;
+      var->memBlock->value = csound->e0dbfs;
 
 
     }
@@ -1745,7 +1679,6 @@ static void insprep(CSOUND *csound, INSTRTXT *tp, ENGINE_STATE *engineState)
             arg->next = NULL;
           }
         }
-        ttp->outArgCount = argCount(ttp->outArgs);
       }
       if ((inlist = ttp->inlist) == NULL || !inlist->count)
         ttp->inArgs = NULL;
@@ -1779,8 +1712,6 @@ static void insprep(CSOUND *csound, INSTRTXT *tp, ENGINE_STATE *engineState)
           }
         }
 
-        ttp->inArgCount = argCount(ttp->inArgs);
-
         if (ttp->oentry == pset) {
           MYFLT* fp1;
           int n;
@@ -1805,7 +1736,7 @@ static void insprep(CSOUND *csound, INSTRTXT *tp, ENGINE_STATE *engineState)
             switch (inArgs->type) {
               case ARG_CONSTANT:
 
-                *fp1++ = engineState->constantsPool->values[inArgs->index].memBlock;
+                *fp1++ = engineState->constantsPool->values[inArgs->index].value;
                 break;
 
 //                      case ARG_LOCAL:
@@ -1891,7 +1822,7 @@ static ARG* createArg(CSOUND *csound, INSTRTXT* ip,
     } else if (c == '"') {
       size_t memSize = sizeof(CS_VAR_MEM) - sizeof(MYFLT) + sizeof(STRINGDAT);
       CS_VAR_MEM* varMem = csound->Calloc(csound, memSize);
-      STRINGDAT *str = (STRINGDAT*)&varMem->memBlock;
+      STRINGDAT *str = (STRINGDAT*)&varMem->value;
       
       varMem->varType = (CS_TYPE*)&CS_VAR_TYPE_S;
       arg->type = ARG_STRING;
@@ -2014,7 +1945,7 @@ void debugPrintCsound(CSOUND* csound)
     count = 0;
     for(count = 0; count < csound->engineState.constantsPool->count; count++) {
       csound->Message(csound, "    %d) %f\n",
-                      count, csound->engineState.constantsPool->values[count].memBlock);
+                      count, csound->engineState.constantsPool->values[count].value);
     }
 
     csound->Message(csound, "Global Variables:\n");
