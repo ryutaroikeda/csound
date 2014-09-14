@@ -505,9 +505,9 @@ TREE * create_expression(CSOUND *csound, TREE *root, int line, int locn,
                           root->value->lexeme, root->value->optype, line);
           outtype = "i";
         }
-          
+
         outtype_internal = convert_external_to_internal(csound, outtype);
-          
+
         outarg = create_out_arg(csound, outtype_internal, typeTable);
 
       }
@@ -644,7 +644,8 @@ TREE * create_boolean_expression(CSOUND *csound, TREE *root, int line, int locn,
       csound->Message(csound, "Creating boolean expression\n");
     /* HANDLE SUB EXPRESSIONS */
     if (is_boolean_expression_node(root->left)) {
-      anchor = create_boolean_expression(csound, root->left, line, locn, typeTable);
+      anchor = create_boolean_expression(csound, root->left,
+                                         line, locn, typeTable);
       last = anchor;
       while (last->next != NULL) {
         last = last->next;
@@ -797,6 +798,21 @@ TREE *create_synthetic_label(CSOUND *csound, int32 count)
     return make_leaf(csound, -1, 0, LABEL_TOKEN, make_label(csound, label));
 }
 
+void handle_negative_number(CSOUND* csound, TREE* root) {
+  if (root->type == S_UMINUS &&
+      (root->right->type == INTEGER_TOKEN || root->right->type == NUMBER_TOKEN)) {
+    int len = strlen(root->right->value->lexeme);
+    char* negativeNumber = csound->Malloc(csound, len + 3);
+    negativeNumber[0] = '-';
+    strcpy(negativeNumber + 1, root->right->value->lexeme);
+    negativeNumber[len + 2] = '\0';
+    root->type = root->right->type;
+    root->value = root->right->type == INTEGER_TOKEN ?
+      make_int(csound, negativeNumber) : make_num(csound, negativeNumber);
+    root->value->lexeme = negativeNumber;
+  }
+}
+
 /* returns the head of a list of TREE* nodes, expanding all RHS
    expressions into statements prior to the original statement line,
    and LHS expressions (array sets) after the original statement
@@ -819,6 +835,7 @@ TREE* expand_statement(CSOUND* csound, TREE* current, TYPE_TABLE* typeTable) {
         TREE *newArgTree;
         TREE *expressionNodes;
         int is_bool = 0;
+        handle_negative_number(csound, currentArg);
         if (is_expression_node(currentArg) ||
             (is_bool = is_boolean_expression_node(currentArg))) {
             char * newArg;

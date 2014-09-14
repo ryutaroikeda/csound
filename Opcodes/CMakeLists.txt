@@ -13,6 +13,8 @@ option(BUILD_SERIAL_OPCODES "Build the serial opcode" ON)
 option(BUILD_PLATEREV_OPCODES "Build the platerev opcode" ON)
 option(BUILD_FAUST_OPCODES "Build the Faust opcodes" OFF)
 option(BUILD_VST4CS_OPCODES "Build the vst4cs opcodes" OFF)
+option(BUILD_EXCITER_OPCODES "Build the exciter opcode" ON)
+option(BUILD_BUCHLA_OPCODES "Build the Buchla filter opcode" OFF)
 
 find_package(Boost)
 check_include_file(ladspa.h LADSPA_H)
@@ -190,6 +192,14 @@ check_deps(BUILD_WIIMOTE_OPCODES WIIUSE_H WIIUSE_LIB)
 if(BUILD_WIIMOTE_OPCODES)
     make_plugin(wiimote wiimote.c ${WIIUSE_LIB})
     add_dependency_to_framework(wiimote ${WIIUSE_LIB})
+endif()
+
+if(BUILD_EXCITER_OPCODES)
+    make_plugin(exciter exciter.c)
+endif()
+
+if(BUILD_BUCHLA_OPCODES)
+    make_plugin(buchla buchla.c)
 endif()
 
 check_deps(BUILD_P5GLOVE_OPCODES P5GLOVE_H)
