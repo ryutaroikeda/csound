@@ -198,3 +198,4 @@ project.xcworkspace/
 xcuserdata/
 win/dependencies/
 win/nuget.exe
+*.orig

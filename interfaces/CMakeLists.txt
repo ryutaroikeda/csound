@@ -7,6 +7,12 @@ option(BUILD_PYTHON_INTERFACE "Build the Python interface (needs BUILD_CXX_INTER
 option(BUILD_JAVA_INTERFACE "Build the Java interface (needs BUILD_CXX_INTERFACE)" ON)
 option(BUILD_LUA_INTERFACE "Build the Lua interface (needs BUILD_CXX_INTERFACE)" ON)
 
+find_library(PTHREAD_LIBRARY pthread)
+
+if(NOT PTHREAD_LIBRARY AND WIN32)
+    find_library(PTHREAD_LIBRARY pthreadVC2)
+endif()
+
 if(BUILD_CXX_INTERFACE)
     message(STATUS "Building C++ interface library")
     set(libcsnd6_SRCS
@@ -18,7 +24,7 @@ if(BUILD_CXX_INTERFACE)
         filebuilding.cpp)
       set(libcsnd6_LIBS ${LIBSNDFILE_LIBRARY} )
     set(libcsnd6_CFLAGS "")
-    list(APPEND libcsnd6_LIBS ${CSOUNDLIB})
+    list(APPEND libcsnd6_LIBS ${CSOUNDLIB} ${PTHREAD_LIBRARY})
 
     add_library(libcsnd6 SHARED ${libcsnd6_SRCS})
     target_link_libraries(libcsnd6 ${libcsnd6_LIBS})
@@ -64,7 +70,7 @@ MESSAGE(STATUS ${PYTHON_LIBRARY})
 
 check_deps(BUILD_PYTHON_INTERFACE SWIG_FOUND BUILD_CXX_INTERFACE PYTHONLIBS_FOUND)
 check_deps(BUILD_JAVA_INTERFACE SWIG_FOUND BUILD_CXX_INTERFACE JNI_FOUND JAVA_FOUND)
-check_deps(BUILD_LUA_INTERFACE SWIG_FOUND BUILD_CXX_INTERFACE  LUAJIT_LIBRARY LUA_H_PATH)
+check_deps(BUILD_LUA_INTERFACE SWIG_FOUND BUILD_CXX_INTERFACE LUAJIT_LIBRARY LUA_H_PATH)
 
 if(BUILD_PYTHON_INTERFACE OR BUILD_JAVA_INTERFACE OR BUILD_LUA_INTERFACE)
 

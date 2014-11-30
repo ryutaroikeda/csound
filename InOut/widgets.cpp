@@ -24,8 +24,12 @@
 #if defined(WIN32)
 #include <FL/Fl_Output.H>
 #endif
-#include <unistd.h>
 #include <csound.h>
+#if defined(MSVC)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 #include "widglobals.h"
 #include <FL/x.H>
 

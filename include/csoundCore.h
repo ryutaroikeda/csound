@@ -1251,7 +1251,7 @@ typedef struct NAME__ {
     int (*OpenLibrary)(void **library, const char *libraryPath);
     int (*CloseLibrary)(void *library);
     void *(*GetLibrarySymbol)(void *library, const char *procedureName);
-#ifndef __MACH__
+#if !defined(__MACH__) && !defined(MSVC)
     char *(*LocalizeString)(const char *) __attribute__ ((format_arg (1)));
 #else
     char *(*LocalizeString)(const char *);
