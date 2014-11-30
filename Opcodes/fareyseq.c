@@ -29,6 +29,7 @@
 #include "csoundCore.h"
 #include "interlocks.h"
 #include <math.h>
+#include <time.h>
 
 #ifdef MSVC
  #define MAX_PFACTOR 16

@@ -984,10 +984,9 @@ static void
         }
         else {
           /* It was a library, but not a LADSPA one. Unload it. */
-          dlclose(pcFilename);
-          //closedir(pvPluginHandle);
+          dlclose(pvPluginHandle);
           pvPluginHandle = NULL;
-          csound->Free(csound, pcFilename);
+          //csound->Free(csound, pcFilename);
         }
         csound->Free(csound, pcFilename);
       }
@@ -1009,7 +1008,11 @@ LADSPAPluginSearch(CSOUND *csound,
     if (!pcLADSPAPath) {
       csound->Message(csound,
                       "DSSI4CS: LADSPA_PATH environment variable not set.\n");
+#ifdef LIB64
+      pcLADSPAPath = "/usr/lib64/ladspa/";
+#else
       pcLADSPAPath = "/usr/lib/ladspa/";
+#endif
     }
     if (!pcDSSIPath) {
       csound->Message(csound,
