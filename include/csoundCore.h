@@ -1251,7 +1251,12 @@ typedef struct NAME__ {
     int (*OpenLibrary)(void **library, const char *libraryPath);
     int (*CloseLibrary)(void *library);
     void *(*GetLibrarySymbol)(void *library, const char *procedureName);
-    char *(*LocalizeString)(const char *) __attribute__ ((format_arg (1)));
+    char *(*LocalizeString)(const char *str)
+#ifdef MSVC
+        ;
+#else
+        __attribute__ ((format_arg (1)));
+#endif
     char *(*strtok_r)(char*, char*, char**);
     double (*strtod)(char*, char**);
     int (*sprintf)(char *str, const char *format, ...);
