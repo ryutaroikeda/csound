@@ -24,6 +24,10 @@
                                                         /* buchla.c */
 #include "csdl.h"
 
+#ifdef MSVC
+ #define M_PI 3.14159265358979323846
+#endif
+
 #define clip(a,b,c) (a<b ? b : a>c ? c : a)
 
 //#ifdef JPFF
