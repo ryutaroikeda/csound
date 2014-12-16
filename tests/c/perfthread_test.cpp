@@ -18,7 +18,7 @@ int clean_suite1(void)
     return 0;
 }
 
-#if defined(__WINNT__)
+#if defined(__WINNT__) || defined(MSVC)
     #include <Windows.h>
 #else
     #include "unistd.h"
