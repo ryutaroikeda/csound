@@ -55,7 +55,7 @@ set(HEADER_INSTALL_DIR "include/csound")
 
 #set(CS_FRAMEWORK_DEST "~/Library/Frameworks")
 # Use homebrew default
-set(CS_FRAMEWORK_DEST "${CMAKE_INSTALL_PREFIX}")
+set(CS_FRAMEWORK_DEST "${CMAKE_INSTALL_PREFIX}/Frameworks")
 include(TestBigEndian)
 include(CheckFunctionExists)
 include(CheckIncludeFile)
