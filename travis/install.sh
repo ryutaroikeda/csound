@@ -2,7 +2,7 @@ echo "Running install.sh"
 
 if [[ ${1} = osx ]] ; then
   brew tap ryutaroikeda/homebrew-csound
-  brew install ryutaroikeda/csound/csound
+  brew install --HEAD ryutaroikeda/csound/csound
 else
       # Have an uptodate libc6
       sudo apt-get install -qq g++-4.8
