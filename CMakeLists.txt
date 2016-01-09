@@ -53,9 +53,10 @@ set(LUA_MODULE_INSTALL_DIR ${LIBRARY_INSTALL_DIR})
 set(LOCALE_INSTALL_DIR "share/locale")
 set(HEADER_INSTALL_DIR "include/csound")
 
-#set(CS_FRAMEWORK_DEST "~/Library/Frameworks")
-# Use homebrew default
-set(CS_FRAMEWORK_DEST "${CMAKE_INSTALL_PREFIX}/Frameworks")
+# Install frameworks in homebrew's default path
+set(HOMEBREW_PREFIX "/usr/local")
+set(CS_FRAMEWORK_DEST "${HOMEBREW_PREFIX}/Frameworks")
+
 include(TestBigEndian)
 include(CheckFunctionExists)
 include(CheckIncludeFile)
