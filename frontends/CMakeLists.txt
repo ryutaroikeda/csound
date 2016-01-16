@@ -43,14 +43,7 @@ endfunction(make_plugin_frontend)
 
 # We need a different name to avoid clashes with float libcsound
 make_executable(csound-bin "${CS_MAIN_SRCS}" "${CSOUNDLIB}" csound)
-if(APPLE)
-add_custom_command(
-       TARGET csound-bin
-       POST_BUILD
-       COMMAND ${CMAKE_INSTALL_NAME_TOOL}
-       ARGS -change ${source} @loader_path/Resources/libs/${depname} ${CSOUNDLIB_DIR}/${CSOUNDLIB}
-       )
-endif()
+
 if(LINUX)
   target_link_libraries(csound-bin m)
 endif()
